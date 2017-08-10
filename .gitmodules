@@ -1,0 +1,3 @@
+[submodule "esp8266/webrepl"]
+	path = esp8266/webrepl
+	url = https://github.com/micropython/webrepl.git
