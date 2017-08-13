@@ -3,6 +3,7 @@
 
 esp8266/cabane/bme280.py
 esp8266/cabane/tsl2561.py
+esp8266/cabane/am2315.py
 
 
 # Byte-compiled / optimized / DLL files
