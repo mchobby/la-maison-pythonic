@@ -53,7 +53,7 @@ try:
     if q.connect() != 0:
     	led_error( step=1 )
 except:
-    led_error( step=2 ) # check MQTT_SERVER 
+    led_error( step=2 ) # check MQTT_SERVER, MQTT_USE- MQTT_PSWD
 
 try:
     from tsl2561 import TSL2561
