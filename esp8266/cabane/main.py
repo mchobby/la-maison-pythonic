@@ -11,7 +11,7 @@ CLIENT_ID = 'cabane'
 # Utiliser ceci si le Pi est en adresse fixe (car pas de propagation du Hostname)
 # MQTT_SERVER = '192.168.1.220'
 # Utiliser ceci (hostname) si le Pi utilise le DHCP (car propagation du Hostname)
-MQTT_SERVER = 'pythonic'
+MQTT_SERVER = 'pythonic.local'
 
 # Mettre a None si pas utile
 MQTT_USER = 'pusr103'
