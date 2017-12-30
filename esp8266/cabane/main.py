@@ -1,5 +1,8 @@
 # coding: utf8
-# Envoi des données vers MQTT Broker 
+""" La Maison Pythonic - Object Cabane v0.1 
+
+    Envoi des données toutes les 5 minutes vers serveur MQTT
+ """ 
 
 from machine import Pin, I2C, reset
 from time import sleep, time
@@ -28,8 +31,8 @@ MQTT_SERVER = "192.168.1.210"
 MQTT_USER = 'pusr103'
 MQTT_PSWD = '21052017'
 
-# redemarrage auto après erreur
-ERROR_REBOOT_TIME = 60 # 1 h = 3600 sec
+# redemarrage auto après erreur 
+ERROR_REBOOT_TIME = 3600 # 1 h = 3600 sec
 
 # temps pause entre 2 mesures
 SLEEP_TIME = 60*5  # 5 minutes = 300 secondes
@@ -72,14 +75,16 @@ try:
 	q = MQTTClient( client_id = CLIENT_ID, server = MQTT_SERVER, user = MQTT_USER, password = MQTT_PSWD )
 	if q.connect() != 0:
 		led_error( step=1 )
-except:
+except Exception as e:
+	print( e )
 	led_error( step=2 ) # check MQTT_SERVER, MQTT_USE- MQTT_PSWD
 
 try:
 	from tsl2561 import TSL2561
 	from bme280 import BME280, BMP280_I2CADDR
 	from am2315 import AM2315
-except:
+except Exception as e:
+	print( e )
 	led_error( step=3 )
 
 # declare le bus i2c
@@ -90,42 +95,53 @@ try:
 	tsl = TSL2561( i2c=i2c )
 	bmp = BME280( i2c=i2c, address=BMP280_I2CADDR )
 	am = AM2315( i2c=i2c )
-except:
+except Exception as e:
+	print( e )
 	led_error( step=4 )
 
-# annonce connexion objet
-sMac = hexlify( WLAN().config( 'mac' ) ).decode()
-q.publish( "connect/%s" % CLIENT_ID , sMac )
+try:
+	# annonce connexion objet
+	sMac = hexlify( WLAN().config( 'mac' ) ).decode()
+	q.publish( "connect/%s" % CLIENT_ID , sMac )
+except Exception as e:
+	print( e )
+	led_error( step=5 )
 
-while runapp.value()==1:
-	led.value( 1 ) # eteindre pendant envoi
-	# tsl2561 - senseur lux
-	lux = "{0:.2f}lx".format( tsl.read() )
-	q.publish( "maison/exterieur/cabane/lux", lux ) 
-	# bmp280 - senseur pression/température
-	(t,p,h) = bmp.values # capturer les valeurs sous format texte
-	q.publish( "maison/exterieur/cabane/pathm", p )
-	q.publish( "maison/exterieur/cabane/temp", t )
-	# am2315 - humidité/temperature
-	am.measure() # reactive le senseur
-	sleep( 1 )
-	am.measure()
-	t = "{0:.2f}C".format( am.temperature() )
-	h = "{0:.2f}%Rh".format( am.humidity() )
-	q.publish( "maison/exterieur/jardin/temp", t )
-	q.publish( "maison/exterieur/jardin/hrel", h )
-	led.value( 0 ) # allumer
+try:
+	while runapp.value()==1:
+		led.value( 1 ) # eteindre pendant envoi
+		# tsl2561 - senseur lux
+		lux = "{0:.2f}".format( tsl.read() )
+		q.publish( "maison/exterieur/cabane/lux", lux ) 
+		# bmp280 - senseur pression/température
+		(t,p,h) = bmp.raw_values # capturer les valeurs sous format texte
+		t = "{0:.2f}".format(t)  # transformer en chaine de caractère
+		p = "{0:.2f}".format(p)
+		q.publish( "maison/exterieur/cabane/pathm", p )
+		q.publish( "maison/exterieur/cabane/temp", t )
+		# am2315 - humidité/temperature
+		am.measure() # reactive le senseur
+		sleep( 1 )
+		am.measure()
+		t = "{0:.2f}".format( am.temperature() )
+		h = "{0:.2f}".format( am.humidity() )
+		q.publish( "maison/exterieur/jardin/temp", t )
+		q.publish( "maison/exterieur/jardin/hrel", h )
+		led.value( 0 ) # allumer
 
-	# pause de x sec
-	n = time() # now(). Temps en sec
-	nhb = time() 
-	while ( time()-n ) < SLEEP_TIME:
-		# heartbeat 200ms / 10 sec
-		if (time()-nhb) > 10:
-			led.value( 1 ) # eteindre
-			sleep( 0.2 )
-			led.value( 0 ) # allumer 
-			nhb = time()
-		sleep( 0.300 )
+		# pause de x sec
+		n = time() # now(). Temps en sec
+		nhb = time() 
+		while ( time()-n ) < SLEEP_TIME:
+			# heartbeat 200ms / 10 sec
+			if (time()-nhb) > 10:
+				led.value( 1 ) # eteindre
+				sleep( 0.2 )
+				led.value( 0 ) # allumer 
+				nhb = time()
+			sleep( 0.300 )
 
-led.value( 1 ) # eteindre
+	led.value( 1 ) # eteindre
+except Exception as e:
+	print( e )
+	led_error( step=6 )
