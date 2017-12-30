@@ -1,8 +1,7 @@
 # coding: utf8
-""" La Maison Pythonic - Object Cabane v0.2 
+""" La Maison Pythonic - Object Salon v0.1 
 
-	Envoi des données toutes les heures + 30 minutes 
-	vers serveur MQTT
+	Envoi des données température et senseur PIR vers serveur MQTT
  """ 
 
 from machine import Pin, I2C, reset
@@ -10,7 +9,7 @@ from time import sleep, time
 from ubinascii import hexlify
 from network import WLAN
 
-CLIENT_ID = 'cabane'
+CLIENT_ID = 'salon'
 
 # Utiliser résolution DNS (serveur en ligne) 
 # MQTT_SERVER = 'test.mosquitto.org'
@@ -75,10 +74,9 @@ except Exception as e:
 	print( e )
 	led_error( step=2 ) # check MQTT_SERVER, MQTT_USE- MQTT_PSWD
 
+# --- CHANGE FROM HERE --------------------------------
 try:
-	from tsl2561 import TSL2561
-	from bme280 import BME280, BMP280_I2CADDR
-	from am2315 import AM2315
+	from ads1x15 import *
 except Exception as e:
 	print( e )
 	led_error( step=3 )
@@ -88,9 +86,7 @@ i2c = I2C( sda=Pin(4), scl=Pin(5) )
 
 # créer les senseurs
 try:
-	tsl = TSL2561( i2c=i2c )
-	bmp = BME280( i2c=i2c, address=BMP280_I2CADDR )
-	am = AM2315( i2c=i2c )
+	adc = ADS1115( i2c=i2c, address=0x48, gain=0 )
 except Exception as e:
 	print( e )
 	led_error( step=4 )
@@ -108,30 +104,14 @@ import uasyncio as asyncio
 def capture_1h():
 	""" Executé pour capturer des donnees chaque heure """
 	global q
-	global bmp
-	global am
-	# bmp280 - senseur pression/température
-	(t,p,h) = bmp.raw_values # capturer les valeurs sous format texte
+	global adc
+	# tmp36 - senseur température
+	valeur = adc.read( rate=0, channel1=0 )
+	mvolts = valeur * 0.1875
+	t = (mvolts - 500)/10
 	t = "{0:.2f}".format(t)  # transformer en chaine de caractère
-	p = "{0:.2f}".format(p)
-	q.publish( "maison/exterieur/cabane/pathm", p )
-	q.publish( "maison/exterieur/cabane/temp", t )
-	# am2315 - humidité/temperature
-	am.measure() # reactive le senseur
-	sleep( 1 )
-	am.measure()
-	t = "{0:.2f}".format( am.temperature() )
-	h = "{0:.2f}".format( am.humidity() )
-	q.publish( "maison/exterieur/jardin/temp", t )
-	q.publish( "maison/exterieur/jardin/hrel", h )
+	q.publish( "maison/rez/salon/temp", t )
 
-def capture_30min():
-	""" Executé pour capturer des donnees chaque heure """
-	global q
-	global tsl
-	# tsl2561 - senseur lux
-	lux = "{0:.2f}".format( tsl.read() )
-	q.publish( "maison/exterieur/cabane/lux", lux ) 
 
 def heartbeat():
 	""" Led eteinte 200ms toutes les 10 sec """
@@ -156,7 +136,6 @@ async def run_app_exit():
 
 loop = asyncio.get_event_loop()
 loop.create_task( run_every(capture_1h, min=60) )
-loop.create_task( run_every(capture_30min, min=30) )
 loop.create_task( run_every(heartbeat, sec=10) )
 try:
 	loop.run_until_complete( run_app_exit() )
