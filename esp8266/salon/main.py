@@ -5,7 +5,7 @@
  """ 
 
 from machine import Pin, I2C, reset
-from time import sleep, time
+import time
 from ubinascii import hexlify
 from network import WLAN
 
@@ -34,6 +34,14 @@ MQTT_PSWD = '21052017'
 # redemarrage auto après erreur 
 ERROR_REBOOT_TIME = 3600 # 1 h = 3600 sec
 
+# PIR
+PIR_PIN = 13 # Signal du senseur PIR.
+PIR_RETRIGGER_TIME = 15 * 60 # 15 min
+last_pir_time = 0 # temps (sec) dernière activation PIR
+last_pir_msg  = "NONE"
+last_pir_msg_time = 0 # temps (sec) dernier envoi MSG
+fire_pir_alert = False # Does the main thread has to fire a PIR "MOUV" quickly?
+
 # --- Demarrage conditionnel ---
 runapp = Pin( 12,  Pin.IN, Pin.PULL_UP )
 led = Pin( 0, Pin.OUT )
@@ -41,20 +49,20 @@ led.value( 1 ) # eteindre
 
 def led_error( step ):
 	global led
-	t = time()
-	while ( time()-t ) < ERROR_REBOOT_TIME:
+	t = time.time()
+	while ( time.time()-t ) < ERROR_REBOOT_TIME:
 		for i in range( 20 ):
 			led.value(not(led.value()))
-			sleep(0.100)
+			time.sleep(0.100)
 		led.value( 1 ) # eteindre
-		sleep( 1 )
+		time.sleep( 1 )
 		# clignote nbr fois
 		for i in range( step ):
 			led.value( 0 ) 
-			sleep( 0.5 )
+			time.sleep( 0.5 )
 			led.value( 1 )
-			sleep( 0.5 )
-		sleep( 1 )
+			time.sleep( 0.5 )
+		time.sleep( 1 )
 	# Re-start the ESP
 	reset()
 
@@ -74,9 +82,10 @@ except Exception as e:
 	print( e )
 	led_error( step=2 ) # check MQTT_SERVER, MQTT_USE- MQTT_PSWD
 
-# --- CHANGE FROM HERE --------------------------------
+# chargement des bibliotheques
 try:
 	from ads1x15 import *
+	from machine import Pin
 except Exception as e:
 	print( e )
 	led_error( step=3 )
@@ -84,9 +93,24 @@ except Exception as e:
 # declare le bus i2c
 i2c = I2C( sda=Pin(4), scl=Pin(5) )
 
+# gestion du senseur PIR
+def pir_activated( p ):
+	# print( 'pir activated @ %s' % time.time() )
+	global last_pir_time, last_pir_msg, fire_pir_alert 
+	last_pir_time = time.time()
+	# Do we have to fire a message in emergency
+	# Set the Flag for may loops
+	fire_pir_alert = (last_pir_msg == "NONE")
+
+
+
 # créer les senseurs
 try:
 	adc = ADS1115( i2c=i2c, address=0x48, gain=0 )
+
+	pir_sensor = Pin( PIR_PIN, Pin.IN )
+	#print( 'pir IRQ registed @ %s' % time.time() )
+	pir_sensor.irq( trigger=Pin.IRQ_RISING, handler=pir_activated )
 except Exception as e:
 	print( e )
 	led_error( step=4 )
@@ -115,7 +139,40 @@ def capture_1h():
 
 def heartbeat():
 	""" Led eteinte 200ms toutes les 10 sec """
-	sleep( 0.2 )
+	# PS: LED déjà éteinte par run_every!
+	time.sleep( 0.2 )
+
+def pir_alert():
+	""" Envoyer un MOUV en urgence si fire_pir_alert """
+	global fire_pir_alert, last_pir_msg, last_pir_msg_time
+	if fire_pir_alert:
+		fire_pir_alert=False # desactiver l'alerte!
+		last_pir_msg = "MOUV"
+		last_pir_msg_time = time.time()
+		q.publish( "/maison/rez/salon/PIR", last_pir_msg )
+
+def pir_update():
+	""" Just update the PIR topic on regular basis """
+	global last_pir_msg, last_pir_msg_time
+	if (time.time() - last_pir_msg_time) < PIR_RETRIGGER_TIME:
+		# ce n est pas le moment d envoyer un message de mise-a-jour
+		return
+
+	# PIR activé depuis les x dernière minutes
+	if (time.time() - last_pir_time) < PIR_RETRIGGER_TIME:
+		msg = "MOUV"
+	else:
+		msg = "NONE"
+	
+	# ne pas renvoyer les NONE
+	if msg == "NONE" == last_pir_msg:
+		return
+	
+	# Publier le msg
+	last_pir_msg = msg
+	last_pir_msg_time = time.time()
+	q.publish( "/maison/rez/salon/PIR", last_pir_msg )
+
 
 async def run_every( fn, min= 1, sec=None):
 	""" Execute a function fn every min minutes or sec secondes"""
@@ -123,7 +180,11 @@ async def run_every( fn, min= 1, sec=None):
 	wait_sec = sec if sec else min*60
 	while True:
 		led.value( 1 ) # eteindre pendant envoi/traitement
-		fn()
+		try:
+			fn()
+		except Exception:
+			print( "run_every() catch exception for %s" % fn)
+			raise # quitter loop
 		led.value( 0 ) # allumer
 		await asyncio.sleep( wait_sec )
 
@@ -136,12 +197,17 @@ async def run_app_exit():
 
 loop = asyncio.get_event_loop()
 loop.create_task( run_every(capture_1h, min=60) )
+loop.create_task( run_every(pir_alert, sec=10) )
+loop.create_task( run_every(pir_update, min=5))
 loop.create_task( run_every(heartbeat, sec=10) )
 try:
 	loop.run_until_complete( run_app_exit() )
 except Exception as e :
 	print( e )
 	led_error( step=6 )
+
+# Desactive l'IRQ
+pir_sensor = Pin( PIR_PIN, Pin.IN )
 
 loop.close()
 led.value( 1 ) # eteindre 
