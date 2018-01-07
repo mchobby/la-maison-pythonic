@@ -184,7 +184,7 @@ async def run_every( fn, min= 1, sec=None):
 			fn()
 		except Exception:
 			print( "run_every catch exception for %s" % fn)
-			raise # quitter loop
+			raise # quitter loop 
 		led.value( 0 ) # allumer
 		await asyncio.sleep( wait_sec )
 
