@@ -149,7 +149,7 @@ def pir_alert():
 		fire_pir_alert=False # desactiver l'alerte!
 		last_pir_msg = "MOUV"
 		last_pir_msg_time = time.time()
-		q.publish( "/maison/rez/salon/PIR", last_pir_msg )
+		q.publish( "/maison/rez/salon/pir", last_pir_msg )
 
 def pir_update():
 	""" Just update the PIR topic on regular basis """
@@ -171,7 +171,7 @@ def pir_update():
 	# Publier le msg
 	last_pir_msg = msg
 	last_pir_msg_time = time.time()
-	q.publish( "/maison/rez/salon/PIR", last_pir_msg )
+	q.publish( "/maison/rez/salon/pir", last_pir_msg )
 
 
 async def run_every( fn, min= 1, sec=None):
