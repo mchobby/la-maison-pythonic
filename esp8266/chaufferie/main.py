@@ -150,6 +150,7 @@ try:
 	# annonce connexion objet
 	sMac = hexlify( WLAN().config( 'mac' ) ).decode()
 	q.publish( "connect/%s" % CLIENT_ID , sMac )
+	# Annonce l'état
 except Exception as e:
 	print( e )
 	led_error( step=5 )
@@ -183,10 +184,11 @@ def chaud_exec_cmd( cmd ):
 	# Notification MQTT du nouvel état
 	#   Etat = commande = ("ARRET","ARRET")
 	q.publish( "maison/cave/chaufferie/etat", cmd ) 
-
+	# Force la publication de la temperature maintenant!
+	capture_1h()
 
 def capture_1h():
-	""" Executé pour capturer des donnees chaque heure """
+	""" Executé pour capturer la temperature chaque heure """
 	global ds
 	global ds_rom
 	# ds18b20 - senseur température 
@@ -195,6 +197,15 @@ def capture_1h():
 	valeur = ds.read_temp( ds_rom )
 	t = "{0:.2f}".format(valeur)  # transformer en chaine de caractère
 	q.publish( "maison/cave/chaufferie/temp-eau", t )
+
+def capture_10m():
+	""" Capture de la temperature toutes les 10min (mais dans
+	l heure suivant un changement d etat de la chaudiere) """
+	global last_chaud_state_time
+	# Dans les 3600 sec (1h) après 
+	if last_chaud_state_time and ( (time.time() - last_chaud_state_time) < 3600 ):
+		# execution par la routine de capture 
+		capture_1h()
 
 def heartbeat():
 	""" Led eteinte 200ms toutes les 10 sec """
@@ -230,10 +241,15 @@ async def run_app_exit():
 	return 
 
 loop = asyncio.get_event_loop()
-loop.create_task( run_every(capture_1h    , sec=60 ) ) #min=60) )
+loop.create_task( run_every(capture_1h    , min=60) ) 
+loop.create_task( run_every(capture_10m   , min=10) )
 loop.create_task( run_every(heartbeat     , sec=10 ) )
 loop.create_task( run_every(check_mqtt_sub, sec=2.5) )
 try:
+	# Annonce l'etat initial
+	q.publish( "maison/cave/chaufferie/etat", last_chaud_state )
+
+	# Execution du scheduler
 	loop.run_until_complete( run_app_exit() )
 except Exception as e :
 	print( e )
