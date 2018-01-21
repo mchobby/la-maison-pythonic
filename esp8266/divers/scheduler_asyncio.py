@@ -1,7 +1,7 @@
 # coding: utf8
 """ Utilisation de asyncio pour planifier des taches.
 
-  Voir également asyncio et exemples sur
+  Voir également asyncio et exemples
   https://github.com/peterhinch/micropython-async """
 
 import uasyncio as asyncio
