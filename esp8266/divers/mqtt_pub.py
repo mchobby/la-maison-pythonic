@@ -1,6 +1,4 @@
 """ La Maison Pythonic - publication sur broker MQTT depuis MicroPython """ 
-from network import WLAN
-
 import time
 from network import WLAN
 from umqtt.simple import MQTTClient
