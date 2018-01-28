@@ -13,7 +13,7 @@ async def print_this( s, time_ms ):
 
 loop = asyncio.get_event_loop()
 loop.create_task( print_this( "every sec", 1000 ) )
-loop.create_task( print_this( "every 1.5sec", 1200 ) )
+loop.create_task( print_this( "every 1.2sec", 1200 ) )
 
 loop.run_forever()
 

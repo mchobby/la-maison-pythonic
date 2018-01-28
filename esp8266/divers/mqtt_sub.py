@@ -47,7 +47,7 @@ print( "souscription OK" )
 sMac = hexlify( WLAN().config( 'mac' ) ).decode()
 q.publish( "connect/%s" % CLIENT_ID , sMac )
 
-# Gestion 
+# Boucle de traitement
 while True:
 	# traitement message MQTT (BLOQUANT)
 	q.wait_msg()
