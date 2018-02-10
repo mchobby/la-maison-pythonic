@@ -110,16 +110,11 @@ import uasyncio as asyncio
 def capture_1h():
 	""" Executé pour capturer des donnees chaque heure """
 	global q
-	global bmp
+	global tsl
 	global am
-	# bmp280 - senseur pression/température
-	# capturer les valeurs sous format texte
-	(t,p,h) = bmp.raw_values 
-	# transformer en chaine de caractère
-	t = "{0:.2f}".format(t)  
-	p = "{0:.2f}".format(p)
-	q.publish( "maison/exterieur/cabane/pathm", p )
-	q.publish( "maison/exterieur/cabane/temp", t )
+	# tsl2561 - senseur lux
+	lux = "{0:.2f}".format( tsl.read() )
+	q.publish( "maison/exterieur/cabane/lux", lux ) 
 	# am2315 - humidité/temperature
 	am.measure() # reactive le senseur
 	sleep( 1 )
@@ -132,10 +127,15 @@ def capture_1h():
 def capture_20min():
 	""" Executé pour capturer des donnees chaque heure """
 	global q
-	global tsl
-	# tsl2561 - senseur lux
-	lux = "{0:.2f}".format( tsl.read() )
-	q.publish( "maison/exterieur/cabane/lux", lux ) 
+	global bmp
+	# bmp280 - senseur pression/température
+	# capturer les valeurs sous format texte
+	(t,p,h) = bmp.raw_values 
+	# transformer en chaine de caractère
+	t = "{0:.2f}".format(t)  
+	p = "{0:.2f}".format(p)
+	q.publish( "maison/exterieur/cabane/pathm", p )
+	q.publish( "maison/exterieur/cabane/temp", t )
 
 def heartbeat():
 	""" Led eteinte 200ms toutes les 10 sec """
