@@ -19,8 +19,9 @@ CLIENT_ID = 'cabane'
 # (plus fiable sur réseau local/domestique)
 # MQTT_SERVER = '192.168.1.220'
 #
-# Utiliser le hostname si Pi en DHCP et que la propagation du
-# hostname atteind le modem/router (voir aussi gestion mDns sur router).
+# Utiliser le hostname si Pi en DHCP et que la propagation
+# du hostname atteind le modem/router (voir aussi gestion 
+# mDns sur router).
 # (pas forcement fiable sur réseau domestique)
 # MQTT_SERVER = 'pythonic'
 #
@@ -73,7 +74,8 @@ try:
 		led_error( step=1 )
 except Exception as e:
 	print( e )
-	led_error( step=2 ) # check MQTT_SERVER, MQTT_USE- MQTT_PSWD
+	# check MQTT_SERVER, MQTT_USER, MQTT_PSWD
+	led_error( step=2 )
 
 try:
 	from tsl2561 import TSL2561
@@ -111,8 +113,10 @@ def capture_1h():
 	global bmp
 	global am
 	# bmp280 - senseur pression/température
-	(t,p,h) = bmp.raw_values # capturer les valeurs sous format texte
-	t = "{0:.2f}".format(t)  # transformer en chaine de caractère
+	# capturer les valeurs sous format texte
+	(t,p,h) = bmp.raw_values 
+	# transformer en chaine de caractère
+	t = "{0:.2f}".format(t)  
 	p = "{0:.2f}".format(p)
 	q.publish( "maison/exterieur/cabane/pathm", p )
 	q.publish( "maison/exterieur/cabane/temp", t )
@@ -125,7 +129,7 @@ def capture_1h():
 	q.publish( "maison/exterieur/jardin/temp", t )
 	q.publish( "maison/exterieur/jardin/hrel", h )
 
-def capture_30min():
+def capture_20min():
 	""" Executé pour capturer des donnees chaque heure """
 	global q
 	global tsl
@@ -142,7 +146,8 @@ async def run_every( fn, min= 1, sec=None):
 	global led
 	wait_sec = sec if sec else min*60
 	while True:
-		led.value( 1 ) # eteindre pendant envoi/traitement
+		# eteindre pendant envoi/traitement
+		led.value( 1 ) 
 		fn()
 		led.value( 0 ) # allumer
 		await asyncio.sleep( wait_sec )
@@ -156,7 +161,7 @@ async def run_app_exit():
 
 loop = asyncio.get_event_loop()
 loop.create_task( run_every(capture_1h, min=60) )
-loop.create_task( run_every(capture_30min, min=30) )
+loop.create_task( run_every(capture_20min, min=20) )
 loop.create_task( run_every(heartbeat, sec=10) )
 try:
 	loop.run_until_complete( run_app_exit() )
