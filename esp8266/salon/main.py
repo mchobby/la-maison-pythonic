@@ -37,10 +37,14 @@ ERROR_REBOOT_TIME = 3600 # 1 h = 3600 sec
 # PIR
 PIR_PIN = 13 # Signal du senseur PIR.
 PIR_RETRIGGER_TIME = 15 * 60 # 15 min
-last_pir_time = 0 # temps (sec) dernière activation PIR
+# temps (sec) dernière activation PIR
+last_pir_time = 0 
 last_pir_msg  = "NONE"
-last_pir_msg_time = 0 # temps (sec) dernier envoi MSG
-fire_pir_alert = False # Does the main thread has to fire a PIR "MOUV" quickly?
+# temps (sec) dernier envoi MSG
+last_pir_msg_time = 0 
+# Programme principal doit-il envoyer
+# une notification "MOUV" rapidement?
+fire_pir_alert = False 
 
 # --- Demarrage conditionnel ---
 runapp = Pin( 12,  Pin.IN, Pin.PULL_UP )
@@ -63,7 +67,7 @@ def led_error( step ):
 			led.value( 1 )
 			time.sleep( 0.5 )
 		time.sleep( 1 )
-	# Re-start the ESP
+	# Re-demarre l'ESP
 	reset()
 
 if runapp.value() != 1:
@@ -80,7 +84,8 @@ try:
 		led_error( step=1 )
 except Exception as e:
 	print( e )
-	led_error( step=2 ) # check MQTT_SERVER, MQTT_USE- MQTT_PSWD
+	# Verifier MQTT_SERVER, MQTT_USER, MQTT_PSWD
+	led_error( step=2 ) 
 
 # chargement des bibliotheques
 try:
@@ -98,18 +103,15 @@ def pir_activated( p ):
 	# print( 'pir activated @ %s' % time.time() )
 	global last_pir_time, last_pir_msg, fire_pir_alert 
 	last_pir_time = time.time()
-	# Do we have to fire a message in emergency
-	# Set the Flag for may loops
+	# Faut-il lancer un message MOUV rapidement? 
+	# Initialiser le drapeau pour la boucle principale
 	fire_pir_alert = (last_pir_msg == "NONE")
-
-
 
 # créer les senseurs
 try:
 	adc = ADS1115( i2c=i2c, address=0x48, gain=0 )
 
 	pir_sensor = Pin( PIR_PIN, Pin.IN )
-	#print( 'pir IRQ registed @ %s' % time.time() )
 	pir_sensor.irq( trigger=Pin.IRQ_RISING, handler=pir_activated )
 except Exception as e:
 	print( e )
@@ -136,14 +138,14 @@ def capture_1h():
 	t = "{0:.2f}".format(t)  # transformer en chaine de caractère
 	q.publish( "maison/rez/salon/temp", t )
 
-
 def heartbeat():
 	""" Led eteinte 200ms toutes les 10 sec """
 	# PS: LED déjà éteinte par run_every!
 	time.sleep( 0.2 )
 
 def pir_alert():
-	""" Envoyer un MOUV en urgence si fire_pir_alert """
+	""" Envoyer un MOUV en urgence sur topic salon/pir 
+	    si fire_pir_alert """
 	global fire_pir_alert, last_pir_msg, last_pir_msg_time
 	if fire_pir_alert:
 		fire_pir_alert=False # desactiver l'alerte!
@@ -152,10 +154,11 @@ def pir_alert():
 		q.publish( "/maison/rez/salon/pir", last_pir_msg )
 
 def pir_update():
-	""" Just update the PIR topic on regular basis """
+	""" Mise à jour régulière du topic salon/pir """
 	global last_pir_msg, last_pir_msg_time
 	if (time.time() - last_pir_msg_time) < PIR_RETRIGGER_TIME:
-		# ce n est pas le moment d envoyer un message de mise-a-jour
+		# ce n est pas le moment d envoyer un 
+		# message de mise-a-jour
 		return
 
 	# PIR activé depuis les x dernière minutes
@@ -175,7 +178,6 @@ def pir_update():
 
 
 async def run_every( fn, min= 1, sec=None):
-	""" Execute a function fn every min minutes or sec secondes"""
 	global led
 	wait_sec = sec if sec else min*60
 	while True:
