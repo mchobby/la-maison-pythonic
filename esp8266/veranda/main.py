@@ -14,15 +14,6 @@ CLIENT_ID = 'veranda'
 # Utiliser résolution DNS (serveur en ligne) 
 # MQTT_SERVER = 'test.mosquitto.org'
 #
-# Utiliser IP si le Pi en adresse fixe 
-# (plus fiable sur réseau local/domestique)
-# MQTT_SERVER = '192.168.1.220'
-#
-# Utiliser le hostname si Pi en DHCP et que la propagation du
-# hostname atteind le modem/router (voir aussi gestion mDns sur router).
-# (pas forcement fiable sur réseau domestique)
-# MQTT_SERVER = 'pythonic'
-#
 # Attention: MicroPython sous ESP8266 ne gère pas mDns!
 
 MQTT_SERVER = "192.168.1.210"
@@ -39,14 +30,16 @@ CONTACT_PIN = 13 # Signal du senseur PIR.
 last_contact_state = 0 # 0=fermé, 1=ouvert
 
 # Etat LDR
-LDR_HYST  = 200  # Valeur d'hystersis (pour éviter la basculement continuel)
+#    Valeur d'hystersis (pour éviter la 
+#    basculement continuel)
+LDR_HYST  = 200  
 last_ldr_state = "NOIR" # Noir ou ECLAIRAGE
 
 def ldr_to_state( adc_ldr, adc_pivot ):
 	""" Transforme la valeur adc lue en NOIR et ECLAIRAGE """
 	global last_ldr_state
-	# print( "adc_ldr, adc_pivot = %s, %s" % (adc_ldr, adc_pivot) ) 
-	LDR_HYST  = 200  # Valeur d'hystersis (pour éviter la basculement continuel)
+	# print( "adc_ldr, adc_pivot = %s, %s" % 
+	#        (adc_ldr, adc_pivot) ) 
 	if adc_ldr > (adc_pivot+LDR_HYST):
 		return "ECLAIRAGE"
 	elif adc_ldr < (adc_pivot-LDR_HYST):
@@ -87,7 +80,10 @@ led.value( 0 ) # allumer
 # --- Programme Pincipal ---
 from umqtt.simple import MQTTClient
 try: 
-	q = MQTTClient( client_id = CLIENT_ID, server = MQTT_SERVER, user = MQTT_USER, password = MQTT_PSWD )
+	q = MQTTClient( client_id = CLIENT_ID, 
+		server = MQTT_SERVER, 
+		user = MQTT_USER, 
+		password = MQTT_PSWD )
 	if q.connect() != 0:
 		led_error( step=1 )
 except Exception as e:
@@ -112,7 +108,8 @@ try:
 
 	contact = Pin( CONTACT_PIN, Pin.IN, Pin.PULL_UP )
 	last_contact_state = contact.value()
-	# lire la valeur de la LDR et déterminer le dernier etat connu
+	# lire la valeur de la LDR et 
+	#    déterminer le dernier etat connu
 	last_ldr_state = ldr_to_state( 
 		adc_ldr   = adc.read( rate=0, channel1=1),
 		adc_pivot = adc.read( rate=0, channel1=2) )
@@ -138,7 +135,8 @@ def capture_1h():
 	valeur = adc.read( rate=0, channel1=0 )
 	mvolts = valeur * 0.1875
 	t = (mvolts - 500)/10
-	t = "{0:.2f}".format(t)  # transformer en chaine de caractère
+	# transformer en chaine de caractère
+	t = "{0:.2f}".format(t)  
 	q.publish( "maison/rez/veranda/temp", t )
 
 def check_contact():
@@ -153,7 +151,8 @@ def check_contact():
 	# relire l'état et s'assurer qu'il n'a pas changé
 	valeur = contact.value()  
 	if valeur != last_contact_state:
-		q.publish( "maison/rez/veranda/portefen", "OUVERT" if valeur==1 else "FERME" )
+		q.publish( "maison/rez/veranda/portefen", 
+			"OUVERT" if valeur==1 else "FERME" )
 		last_contact_state = valeur
 
 def check_ldr():
