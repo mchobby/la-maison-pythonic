@@ -19,9 +19,10 @@ CLIENT_ID = 'chaufferie'
 # (plus fiable sur réseau local/domestique)
 # MQTT_SERVER = '192.168.1.220'
 #
-# Utiliser le hostname si Pi en DHCP et que la propagation du
-# hostname atteind le modem/router (voir aussi gestion mDns sur router).
-# (pas forcement fiable sur réseau domestique)
+# Utiliser le hostname si Pi en DHCP et que la propagation
+# du # hostname atteind le modem/router (voir aussi 
+# gestion mDns sur router). # (pas forcement fiable sur 
+# réseau domestique)
 # MQTT_SERVER = 'pythonic'
 #
 # Attention: MicroPython sous ESP8266 ne gère pas mDns!
@@ -39,7 +40,8 @@ ERROR_REBOOT_TIME = 3600 # 1 h = 3600 sec
 CHAUD_PIN = 13   # Broche activation relais chaudière.
 chaud     = None # objet Pin de la chaudière 
 last_chaud_state = None # Dernier etat connu
-last_chaud_state_time = 0 # temps (sec) du dernier chg d'etat
+# temps (sec) du dernier chg d'etat
+last_chaud_state_time = 0 
 
 # Senseur Temp. DS18B20
 DS18B20_PIN = 2  
@@ -92,7 +94,8 @@ def sub_cb( topic, msg ):
 			chaud_exec_cmd( cmd = m )
 	except Exception as e:
 		# Capturer TOUTE exception sur souscription
-		# Ne pas crasher check_mqtt_sub et asyncio.run_until_complete et l'ESP!
+		# Ne pas crasher check_mqtt_sub et 
+		#    asyncio.run_until_complete et l'ESP!
 
 		# Info debug sur REPL
 		print( "="*20 )
@@ -105,7 +108,9 @@ def sub_cb( topic, msg ):
 
 from umqtt.simple import MQTTClient
 try: 
-	q = MQTTClient( client_id = CLIENT_ID, server = MQTT_SERVER, user = MQTT_USER, password = MQTT_PSWD )
+	q = MQTTClient( client_id = CLIENT_ID, 
+		server = MQTT_SERVER, 
+		user = MQTT_USER, password = MQTT_PSWD )
 	q.set_callback( sub_cb )
 
 	if q.connect() != 0:
@@ -114,7 +119,8 @@ try:
 	q.subscribe( 'maison/cave/chaufferie/cmd' )
 except Exception as e:
 	print( e )
-	led_error( step=2 ) # check MQTT_SERVER, MQTT_USE- MQTT_PSWD
+	# check MQTT_SERVER, MQTT_USER, MQTT_PSWD
+	led_error( step=2 ) 
 
 # chargement des bibliotheques
 try:
@@ -159,7 +165,8 @@ import uasyncio as asyncio
 
 def chaud_exec_cmd( cmd ):
 	""" Executer la commande cmd sur la chaudière.
-	modifie l état de la chaudière et faire les notification """		
+	    Modifie l état de la chaudière et faire 
+	    les notification """		
 	assert cmd in ("MARCHE","ARRET"), "Invalid chaud cmd"
 
 	global q
@@ -195,15 +202,18 @@ def capture_1h():
 	ds.convert_temp()
 	time.sleep_ms( 750 )
 	valeur = ds.read_temp( ds_rom )
-	t = "{0:.2f}".format(valeur)  # transformer en chaine de caractère
+	# transformer en chaine de caractères
+	t = "{0:.2f}".format(valeur)  
 	q.publish( "maison/cave/chaufferie/temp-eau", t )
 
 def capture_10m():
-	""" Capture de la temperature toutes les 10min (mais dans
-	l heure suivant un changement d etat de la chaudiere) """
+	""" Capture de la temperature toutes les 10min (mais 
+	    dans 	l heure suivant un changement d etat de 
+	    la chaudiere) """
 	global last_chaud_state_time
 	# Dans les 3600 sec (1h) après 
-	if last_chaud_state_time and ( (time.time() - last_chaud_state_time) < 3600 ):
+	if last_chaud_state_time and 
+		( (time.time() - last_chaud_state_time) < 3600 ):
 		# execution par la routine de capture 
 		capture_1h()
 
@@ -215,12 +225,13 @@ def heartbeat():
 def check_mqtt_sub():
 	""" Process the MQTT Subscription messages """
 	global q
-	# Non-Blocking wait_msg(). Will call mqtt callback (sub_cb) 
-	# when a message is received for subscription 
+	# Non-Blocking wait_msg(). Will call mqtt callback  
+	# (sub_cb) when a message is received for subscription 
 	q.check_msg() # get one message (if any) 
 
 async def run_every( fn, min= 1, sec=None):
-	""" Execute a function fn every min minutes or sec secondes"""
+	""" Execute a function fn every min minutes 
+	    or sec secondes"""
 	global led
 	wait_sec = sec if sec else min*60
 	while True:

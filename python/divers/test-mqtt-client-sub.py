@@ -36,6 +36,6 @@ client.username_pw_set( username="pusr103", password="21052017" )
 client.connect( host=MQTT_BROKER, port=MQTT_PORT, keepalive=KEEP_ALIVE )
 client.subscribe( "demo/#" )
 
-# traitement des message
+# Envoi des messages
 client.loop_forever()
 
