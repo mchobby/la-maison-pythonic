@@ -1,0 +1,35 @@
+; Sample of push-to-db.ini file 
+; Should be stored in /etc/pythonic/ 
+[app]
+db=/var/local/pythonic/pythonic.db
+
+
+[loggers]
+keys=root
+
+[handlers]
+keys=console,logfile
+
+[formatters]
+keys=default
+
+[logger_root]
+level=NOTSET
+handlers=console,logfile
+
+[handler_console]
+class=StreamHandler
+level=NOTSET
+formatter=default
+args=(sys.stdout,)
+
+[handler_logfile]
+class=FileHandler
+level=NOTSET
+formatter=default
+args=('/var/log/pythonic/push-to-db.log', 'w')
+
+[formatter_default]
+format=F1 %(asctime)s %(levelname)s %(message)s
+datefmt=
+
