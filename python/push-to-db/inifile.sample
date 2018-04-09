@@ -1,8 +1,38 @@
 ; Sample of push-to-db.ini file 
 ; Should be stored in /etc/pythonic/ 
 [app]
-db=/var/local/pythonic/pythonic.db
+param=none
 
+[mqtt.broker]
+mqtt_broker=pythonic.local
+mqtt_port=1883
+mqtt_keepalive=45
+username=pusr103
+password=21052017
+
+[connector.sqlitedb]
+class=SqliteConnector
+db=/var/local/pythonic/pyhtonic.db
+
+[mqtt.capture.0]
+subscribe=maison/rez/#,maison/exterieur/#,maison/cave/#
+class=MqttTopicCapture
+storage=sqlitedb.topicmsg
+
+[mqtt.capture.1]
+subscribe=maison/exterieur/cabane/lux,maison/exterieur/jardin/hrel,maison/exterieur/jardin/temp
+class=MqttTimeserieCapture
+storage=sqlitedb.ts_cab
+
+[mqtt.capture.2]
+subscribe=maison/rez/salon/temp,maison/rez/salon/pir
+class=MqttTimeserieCapture
+storage=sqlitedb.ts_salon
+
+[mqtt.capture.3]
+subscribe=maison/cave/chaufferie/etat,maison/cave/chaufferie/temp-eau
+class=MqttTimeserieCapture
+storage=sqlitedb.ts_chauf
 
 [loggers]
 keys=root
@@ -30,6 +60,6 @@ formatter=default
 args=('/var/log/pythonic/push-to-db.log', 'w')
 
 [formatter_default]
-format=F1 %(asctime)s %(levelname)s %(message)s
+format=%(asctime)s %(levelname)s %(message)s
 datefmt=
 
