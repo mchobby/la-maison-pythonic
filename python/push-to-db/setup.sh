@@ -37,7 +37,7 @@ sudo chown root /var/log/pythonic/push-to-db.log
 echo "Creating pythonic.db in var/local/sqlite/"
 # Initialize the pythonic databases to run the push-to-db.py python script. 
 # push-to-db.py push MQTT data to SQLite3 database
-cat createdb.sql | sqlite /var/local/sqlite/pythonic.db
+cat createdb.sql | sqlite3 /var/local/sqlite/pythonic.db
 
 echo "Installing python libraries"
 sudo pip install paho-mqtt

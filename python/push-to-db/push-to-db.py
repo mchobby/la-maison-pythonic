@@ -10,11 +10,23 @@ import ConfigParser
 import re
 import logging, logging.config
 import paho.mqtt.client as mqtt_client
+import time
+import datetime
+import threading
+from Queue import Queue
+import sqlite3 as sqlite
 
 INIFILE = "/etc/pythonic/push-to-db.ini"
 
 # Init the logger as soon as possible 
 logger = logging.config.fileConfig( INIFILE )
+
+# -------------------------------------------------------------------------------
+#
+#  CONFIG        - lecture du fichier de configuration, 
+#  QueuedMessage - Structure du message mis en queue
+#
+# -------------------------------------------------------------------------------
 
 # Classe maintenant les informations du fichier de config
 class Config:
@@ -106,6 +118,31 @@ class Config:
 		""" return the value as an integer """
 		return int( self.get(section, key, default) )
 
+class QueuedMessage( object ):
+	""" Definit la strucutre des messages MQTT empilé dans une queue dans message_queue en attente de 
+	    leurs traitements (enregistrement en DB par le thread MessageLazyWriter) 
+	"""
+
+	__slots__ = 'receive_time', 'topic', 'payload', 'sub_handler', 'qos'
+
+	def __init__(self, receive_time, topic, payload, qos, sub_handler ):
+		self.receive_time = receive_time
+		self.topic = topic
+		self.payload = payload
+		self.qos = qos
+		# Une des classe MqttXxxCapture "subscripter handler class" capable
+		# d'utiliser d'écrire le message en DB en utilisant son connecteur. 
+		self.sub_handler = sub_handler
+
+# -------------------------------------------------------------------------------
+#
+#  MQTTxxxCapture - Identifie les messages MQTT à capturer (utilise des filtres), 
+#                 - Aussi denommé Sub_Hanlder (Subcription_Handler) car capable
+#                   de gérer la souscription correspondante.
+#                 - Pilote le connector pour stocker le message en DB
+#
+# -------------------------------------------------------------------------------
+
 class MqttBaseCapture( object ):
 	""" Classe de base pour gérer les différentes souscriptions 
 
@@ -164,20 +201,50 @@ class MqttBaseCapture( object ):
 		    la destination où sera sauvé le message traité par la classe """
 		return '%s.%s' % (self.storage_connector.lower(), self.storage_table.lower() )
 
-	def process_message( self, topic, payload ):
-		""" traite la capture et l'enregistrement, doit être surchargé!"""
-		logging.getLogger('root').debug('%s.process_message() to %s.%s for topic %s' % (self.__class__.__name__, self.storage_connector, self.storage_table, topic) )
-		pass
+	def store_data( self, queued_message ):
+		""" traite le message capturé pour l'enregistré à l'aide du connecteur, doit être surchargé!"""
+		#logging.getLogger('root').debug('%s.store_data() to %s.%s for topic %s' % (self.__class__.__name__, \
+		#	self.storage_connector, self.storage_table, queued_message.topic) )
+		logging.getLogger('root').warning( '%s.store_data() must be overloaded' % self.__class__.__name__ )
+		
 
 class MqttTopicCapture( MqttBaseCapture ):
 	""" Classe gérant la capture des messages et stockage de la dernière valeur dans une table """
 	def __init__( self, subscribe_comalist, storage_target, connector ):
 		super( MqttTopicCapture, self).__init__( subscribe_comalist, storage_target, connector )
 
+	def store_data( self, queued_message ):
+		""" traite le message capturé pour l'enregistré à l'aide du connecteur! 
+
+		MqttTopicCapture enregistre juste la dernière valeur dans la table."""
+		connector = queued_message.sub_handler.connector
+		table_name = queued_message.sub_handler.storage_table
+
+		# Le connecteur sait comment accéder à la table
+		connector.update_value( table_name, queued_message.receive_time, 
+			queued_message.topic, queued_message.payload, queued_message.qos )
+
 class MqttTimeserieCapture( MqttBaseCapture ):
 	""" Classe gérant la capture des messages et stockage de la dernière valeur dans une table """
 	def __init__( self, subscribe_comalist, storage_target, connector ):
 		super( MqttTimeserieCapture, self).__init__( subscribe_comalist, storage_target, connector )
+
+	def store_data( self, queued_message ):
+		""" traite le message capturé pour l'enregistré à l'aide du connecteur! 
+
+		MqttTimeserieCapture enregistre la nouvelle valeur dans une table historique."""
+		connector = queued_message.sub_handler.connector
+		table_name = queued_message.sub_handler.storage_table
+
+		# Le connecteur sait comment accéder à la table
+		connector.timeserie_append( table_name, queued_message.receive_time, 
+			queued_message.topic, queued_message.payload, queued_message.qos )
+
+# -------------------------------------------------------------------------------
+#
+#  Les CONNECTORS - accès à la DB et aux tables
+#
+# -------------------------------------------------------------------------------
 
 class BaseConnector( object ):
 	def __init__( self, params ):
@@ -186,11 +253,167 @@ class BaseConnector( object ):
 			params (dic): dictionnaire key=valeur en provenance de la section [connector.xxx]
 			              du fichier de configuration
 		"""	
-		# print( params )
+		self.params = params
 
 class SqliteConnector( BaseConnector ):
-	pass
+	""" Connector to Sqlite database """
+	def __init__( self, params ):
+		super( SqliteConnector, self ).__init__( params )
+		# fichier de stockage de la DB
+		# typiquement /var/local/pythonic/pyhtonic.db
+		self.db_file = params['db']
+		# reference vers le moteur DB
+		self._conn = None 
 
+	def is_connected( self ):
+		return (self._conn != None)
+
+	def connect( self ):
+		if not self.is_connected():
+			logging.getLogger('connector').debug( 'Connect to sqlite db %s' % self.db_file )
+			self._conn = sqlite.connect( self.db_file )
+
+	def disconnect( self ):
+		if self.is_connected():
+			logging.getLogger('connector').debug( 'disconnect() sqlite' )
+			self._conn.close()
+			self._conn = None
+
+	def commit( self ):
+		if self.is_connected():
+			logging.getLogger('connector').debug( 'commit() on sqlite' )
+			# sauver les modifications
+			self._conn.commit()
+
+	def update_value( self, table_name, receive_time, topic, payload, qos ):
+		""" Stocke la dernière valeur connue dans la table """
+		logging.getLogger('connector').debug( 'update_value() on sqlite' )
+
+		sSql = "UPDATE %s SET message = ?, qos = ?, rectime = ? where topic = ?" % table_name
+
+		self.connect()
+		cur = self._conn.cursor()
+		r = cur.execute( sSql, (payload, qos, receive_time, topic) )
+		# Si record pas encore mis-à-jour --> insérer
+		if r.rowcount == 0:
+			sSql = "INSERT INTO %s (topic,message,qos,rectime) VALUES (?,?,?,?)" % table_name
+			r = cur.execute( sSql, (topic,payload,qos,receive_time) )
+
+	def timeserie_append( self, table_name, receive_time, topic, payload, qos ):
+		""" Stocke l'historique de valeurs (timeseries) dans la table """
+		logging.getLogger('connector').debug( 'timeserie_append() on sqlite' )
+
+		sSql = "INSERT INTO %s (topic,message,qos,rectime) VALUES (?,?,?,?)" % table_name
+
+		self.connect()	
+		cur = self._conn.cursor()
+		r = cur.execute( sSql, (topic,payload,qos,receive_time) )			
+
+
+
+# -------------------------------------------------------------------------------
+#
+#  THREAD MessageLazyWriter - traitement de la queue des messages MQTT capturés 
+#
+# -------------------------------------------------------------------------------
+
+class MessageLazyWriter(threading.Thread):
+	""" Thread qui traite la queue des messages MQTT (voir QueuedMessage) pour stocker ceux-ci en DB en
+	    en utilisant les connecteurs.
+
+	    Le thread doit attendre un minimum de messages (ou max de temps) avant de lancer une opération
+	    d'écriture car celles-ci peuvent être bloquantes (suivant le moteur DB utilisé) 
+	    """ 
+	def __init__( self, params, message_queue, connectors, stopper_event ):
+		""" Initialisation
+		Parameters:
+			params (dic): dictionnaire key=valeur en provenance de la section [lazywriter]
+			              du fichier de configuration
+		"""
+		super( MessageLazyWriter, self ).__init__()
+		# Params provient de la secion [lazywriter] du fichier de config
+		self.max_queue_latency   = int(params['maxqueuelatency'])
+		self.max_queue_size      = int(params['maxqueuesize'])
+		self.pause_after_process = int(params['pauseafterprocess'])
+		# Queue FiFo synchronisée
+		self.message_queue = message_queue
+		# Liste des connecteurs
+		self.connectors = connectors
+		# Event pour signaler l'arrêt du thread
+		self.stopper_event = stopper_event
+
+		self.logger = logging.getLogger('root')
+
+	def run( self ):
+		self.logger.debug( 'LazyWriter thread started')
+		# contient l'heure a laquelle le compte à rebours du 
+		# du temps de latence débute (lors de l'arrivé de la
+		# première valeur dans la queue)
+		latency_start = None 
+		while not self.stopper_event.is_set():
+			if self.message_queue.empty():
+				# time.sleep( self.pause_after_process )
+				latency_start = None
+				continue 
+			else:
+				# Si queue pas vide alors débuter temps de latence
+				# si ce n'est pas encore fait 
+				if latency_start == None:
+					self.logger.debug( 'LazyWriter latency_start set to now')
+					latency_start = datetime.datetime.now()
+
+			if self.message_queue.qsize() > self.max_queue_size:
+				self.logger.debug( 'LazyWriter queue size %s reached -> Process_message_queue.' % self.max_queue_size )
+				self.process_message_queue()
+				latency_start = None
+				time.sleep( self.pause_after_process )
+
+			elif latency_start and ((datetime.datetime.now()-latency_start).seconds > self.max_queue_latency):
+				self.logger.debug( 'LazyWriter latency %s sec reached -> Process_message_queue.' % self.max_queue_latency )
+				self.process_message_queue()
+				latency_start = None
+				time.sleep( self.pause_after_process )
+
+		self.logger.debug( 'LazyWriter thread exit')
+
+	def process_message_queue( self ):
+		""" Ecrit les messages de la Queue dans la DB """
+		con_list = []
+		pmq_logger = logging.getLogger('pmq')
+		while not self.message_queue.empty():
+			queued_message = self.message_queue.get()
+			try:
+				pmq_logger.debug( 'process_message_queue %s for handler %s on %s with payload %s' % \
+					(queued_message.topic, queued_message.sub_handler.__class__.__name__, \
+						queued_message.sub_handler.target_id(), queued_message.payload) )
+				# Collecter les connecteur mis-en-oeuvre
+				connector = queued_message.sub_handler.connector
+				if not connector in con_list:
+					con_list.append( connector )
+				# Demander au sub_handler (donc MqttxxxCapture) de stocker les données en DB
+				# grace a son connector.
+				queued_message.sub_handler.store_data( queued_message )
+			except Exception as err:
+				pmq_logger.error( 'process_message_queue encounter an error while processing the message' )
+				pmq_logger.error( '  %s with %s' % (err.__class__.__name__, err) )				
+				pmq_logger.error( '  handler: %s' % queued_message.sub_handler.__class__.__name__ )
+				pmq_logger.error( '  topic  : %s' % queued_message.topic )
+				pmq_logger.error( '  payload: %s' % queued_message.payload )
+			finally:
+				self.message_queue.task_done()
+		# Faire un commit sur tous les connecteurs
+		for connector in con_list:
+			connector.commit()
+			connector.disconnect()
+				
+
+
+
+# -------------------------------------------------------------------------------
+#
+#  Class Application 
+#
+# -------------------------------------------------------------------------------
 class App:
 	""" Classe gérant le fonctionnement applicatif 
 
@@ -198,7 +421,8 @@ class App:
 		config (:obj: Config): Fichier de configuration
 		logger (:obj: Logger): Fichier log initialisé depuis le fichier de configuration
 		sub_handlers ([:obj:MqttBaseCapture, ]): Liste des Handlers MqttXxxCapture créés depuis le fichier de configuration file. 
-		connectors ({:obj:BaseConnector, }): Liste de connecteur XxxxConnector créés depuis le fichier de configuration.
+		connectors ({connector_name, :obj:BaseConnector, }): Liste de connecteur XxxxConnector créés depuis le fichier de configuration.
+		message_queue (:obj:Queue): Liste des messages MQTT reçu et a traiter sous forme de tuple(datetime_reception,topic,message)
 	"""
 
 	def __init__(self):
@@ -206,6 +430,11 @@ class App:
 		self.logger.info( 'Initializing app')
 
 		self.mqtt = None
+		self.message_queue = None 
+		self.connectors = None
+		self.sub_handlers = None
+		# Event utilisé pour arrêter les Thread
+		self.stopper = None  
 
 		self.config = Config( INIFILE )
 		# self.config._dump()
@@ -245,7 +474,7 @@ class App:
 				handler_class( 
 					self.config.get( section, 'subscribe' ),
 					self.config.get( section, 'storage'),
-					connector
+					connector # Chaque Subscription_Handler à déjà une référence vers le connecteur DB à utiliser.
 				)
 			)
 
@@ -255,9 +484,10 @@ class App:
 
 	def _mqtt_on_message( self, client, userdata, message ):
 		""" receiving message from the broker """
-		self.logger.debug( "getting MQTT message..." )
-		self.logger.debug( "  topic: %s" % message.topic )
-		self.logger.debug( "  message: %s" % message.payload )
+		self.logger.info( "getting MQTT message..." )
+		self.logger.info( "  topic  : %s" % message.topic )
+		self.logger.info( "  message: %s" % message.payload )
+		self.logger.info( "  QoS    : %s" % message.qos )
 		try:
 			to_call = {} # sub handler to call
 			for sub_handler in self.sub_handlers:
@@ -270,7 +500,11 @@ class App:
 						to_call[target_id] = sub_handler
 
 			for target_id, sub_handler in to_call.items():
-				sub_handler.process_message( message.topic, message.payload )
+				to_queue = QueuedMessage( receive_time=datetime.datetime.now(), \
+					topic=message.topic, payload=message.payload, \
+					qos=message.qos, sub_handler=sub_handler  )
+				self.message_queue.put( to_queue )
+				#sub_handler.process_message( message.topic, message.payload )
 
 		except Exception as err:
 			self.logger.error( 'Exception while processing MQTT message')
@@ -312,6 +546,14 @@ class App:
 
 	def run( self ):
 		self.logger.info( 'Running app')
+		self.message_queue = Queue() 
+		self.stopper = threading.Event()
+
+		# Thread de traitement des QueuedMessage
+		lazyWriter = MessageLazyWriter( self.config.sections['lazywriter'], \
+			self.message_queue, self.connectors, \
+			self.stopper )
+		lazyWriter.start()
 
 		try:
 			self.connect_broker()
@@ -323,7 +565,17 @@ class App:
 			self.mqtt.loop_forever()
 		except Exception as err:
 			self.logger.error( 'Error while processing broker messages! %s' % err )
-			raise
+		except KeyboardInterrupt:
+			self.logger.info( 'User abord with KeyboardInterrupt exception' )
+		except SystemExit:
+			self.logger.info( 'System exit with SystemExit exception!' )
+
+		# signal threads to stop
+		self.stopper.set()
+
+		# Wait the thread to finish
+		self.logger.info( 'Waiting for LazyWriter thread...')
+		lazyWriter.join()
 
 if __name__ == "__main__":
 	#main()
