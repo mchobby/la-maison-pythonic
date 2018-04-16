@@ -260,7 +260,7 @@ class SqliteConnector( BaseConnector ):
 	def __init__( self, params ):
 		super( SqliteConnector, self ).__init__( params )
 		# fichier de stockage de la DB
-		# typiquement /var/local/pythonic/pyhtonic.db
+		# typiquement /var/local/pythonic/pythonic.db
 		self.db_file = params['db']
 		# reference vers le moteur DB
 		self._conn = None 
@@ -363,13 +363,13 @@ class MessageLazyWriter(threading.Thread):
 					latency_start = datetime.datetime.now()
 
 			if self.message_queue.qsize() > self.max_queue_size:
-				self.logger.debug( 'LazyWriter queue size %s reached -> Process_message_queue.' % self.max_queue_size )
+				self.logger.info( 'LazyWriter queue size %s reached -> Process_message_queue.' % self.max_queue_size )
 				self.process_message_queue()
 				latency_start = None
 				time.sleep( self.pause_after_process )
 
 			elif latency_start and ((datetime.datetime.now()-latency_start).seconds > self.max_queue_latency):
-				self.logger.debug( 'LazyWriter latency %s sec reached -> Process_message_queue.' % self.max_queue_latency )
+				self.logger.info( 'LazyWriter latency %s sec reached -> Process_message_queue.' % self.max_queue_latency )
 				self.process_message_queue()
 				latency_start = None
 				time.sleep( self.pause_after_process )
