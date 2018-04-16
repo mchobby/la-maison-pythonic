@@ -60,7 +60,9 @@ keys=console,logfile
 keys=default
 
 [logger_root]
-; use level=NOTSET pour tous les messages
+; DEBUG, INFO, WARNING, ERROR, CRITICAL ou NOTSET
+; utiliser level=NOTSET pour tous les messages
+; utiliser level=INFO pour suivre les msq MQTT entrant et traitement par LazyWriter
 level=NOTSET
 handlers=console,logfile
 
