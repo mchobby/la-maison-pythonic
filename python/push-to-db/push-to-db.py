@@ -260,7 +260,7 @@ class SqliteConnector( BaseConnector ):
 	def __init__( self, params ):
 		super( SqliteConnector, self ).__init__( params )
 		# fichier de stockage de la DB
-		# typiquement /var/local/pythonic/pythonic.db
+		# typiquement /var/local/sqlite/pythonic.db
 		self.db_file = params['db']
 		# reference vers le moteur DB
 		self._conn = None 
