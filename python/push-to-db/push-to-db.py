@@ -1,4 +1,4 @@
-#!/usr/bin/python
+w#!/usr/bin/python
 # -*- coding: utf8 -*-
 """ La Maison Pythonic - push-to-db  
 
@@ -217,11 +217,8 @@ class MqttTopicCapture( MqttBaseCapture ):
 		""" traite le message capturé pour l'enregistré à l'aide du connecteur! 
 
 		MqttTopicCapture enregistre juste la dernière valeur dans la table."""
-		connector = queued_message.sub_handler.connector
-		table_name = queued_message.sub_handler.storage_table
-
 		# Le connecteur sait comment accéder à la table
-		connector.update_value( table_name, queued_message.receive_time, 
+		self.connector.update_value( self.storage_table, queued_message.receive_time, 
 			queued_message.topic, queued_message.payload, queued_message.qos )
 
 class MqttTimeserieCapture( MqttBaseCapture ):
@@ -237,7 +234,7 @@ class MqttTimeserieCapture( MqttBaseCapture ):
 		table_name = queued_message.sub_handler.storage_table
 
 		# Le connecteur sait comment accéder à la table
-		connector.timeserie_append( table_name, queued_message.receive_time, 
+		self.connector.timeserie_append( self.storage_table, queued_message.receive_time, 
 			queued_message.topic, queued_message.payload, queued_message.qos )
 
 # -------------------------------------------------------------------------------

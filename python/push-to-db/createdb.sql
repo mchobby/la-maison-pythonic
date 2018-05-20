@@ -7,6 +7,8 @@ create table topicmsg (
   tsname text 
 );
 
+CREATE UNIQUE INDEX idx_topicmsg ON topicmsg(topic);
+
 create table ts_cab (
   id integer primary key,
   topic text,
