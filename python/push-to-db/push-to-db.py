@@ -230,9 +230,6 @@ class MqttTimeserieCapture( MqttBaseCapture ):
 		""" traite le message capturé pour l'enregistré à l'aide du connecteur! 
 
 		MqttTimeserieCapture enregistre la nouvelle valeur dans une table historique."""
-		connector = queued_message.sub_handler.connector
-		table_name = queued_message.sub_handler.storage_table
-
 		# Le connecteur sait comment accéder à la table
 		self.connector.timeserie_append( self.storage_table, queued_message.receive_time, 
 			queued_message.topic, queued_message.payload, queued_message.qos )
