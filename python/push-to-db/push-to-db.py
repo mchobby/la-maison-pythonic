@@ -123,7 +123,7 @@ class QueuedMessage( object ):
 	    leurs traitements (enregistrement en DB par le thread MessageLazyWriter) 
 	"""
 
-	__slots__ = 'receive_time', 'topic', 'payload', 'sub_handler', 'qos'
+	__slots__ = ['receive_time', 'topic', 'payload', 'sub_handler', 'qos']
 
 	def __init__(self, receive_time, topic, payload, qos, sub_handler ):
 		self.receive_time = receive_time
