@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% set title = "Editer messages" %}
+{% block content %}
+    <form action="{{ url_for('save_message') }}" method="post">
+    <table>
+      <tr><td>Saisir message1</td>
+          <td><input type="text" name="message1" value="message1" /></td>
+          <td>error?</td>
+          <td><input type="checkbox" name="error1" value="error" /></td>
+      </tr>
+      <tr><td>Saisir message2</td>
+          <td><input type="text" name="message2" value="message2" /></td>
+          <td>error?</td>
+          <td><input type="checkbox" name="error2" value="error" /></td>
+      </tr>
+      <tr><td>Saisir message3</td>
+          <td><input type="text" name="message3" value="message3" /></td>
+          <td>error?</td>
+          <td><input type="checkbox" name="error3" value="error" /></td>
+      </tr>
+      <tr><td colspan="4">
+      	 <input type="submit" name="act" value="Envoyer" />
+         <input type="submit" name="act" value="Envoyer+Saisir Nom" />
+      	 <input type="submit" name="act" value="Abandonner" />
+     </td></tr>
+    </table>
+    </form>    
+{% endblock %}

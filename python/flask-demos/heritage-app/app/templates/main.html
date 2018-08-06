@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Accueil{% endblock %}
+{% block content %}
+    {% if name %}
+       <h1>Bienvenu {{name}}</h1>
+    {% else %}
+       <h1>Page Principale</h1>
+       <p>Vous pouvez également appeler la page avec <strong>/votre_prénom</strong>
+    {% endif %}
+    <p>
+      Partir à la découverte de l'héritage des templates Jinja.
+    </p>    
+    <p>Voici le template main.html qui est une extension de base.html.<br />
+Cette page définit les blocs (<em>block</em>) "title" et "content".</p>
+    <p>L'appel de <strong>/super</strong> permet de tester l'exécution du "super blocks".</p>
+{% endblock %}

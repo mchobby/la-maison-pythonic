@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+      <title>{{ title }}</title>
+   </head>
+   <body>      
+		<h1>{{ title }}</h1>
+		<form  action="{{ url_for('fruit_edit', id=id if id>=0 else None ) }}" method="post">
+		<table border="1">
+			
+			<tr>
+				<td>Nom</td>
+				<td><input type="text" name="nom" value="{{ nom }}"></td> 
+			</tr>
+			<tr>
+				<td>KCal / 100gr</td>
+				<td><input type="text" name="kcal" value="{{ kcal }}"></td> 
+			</tr>
+	
+			<tr><td align="right" colspan="2">
+			  <input type="hidden" name="id" value="{{ id }}">
+			  <input type="submit" value="Envoyer" />
+			  <input type="button" onclick="location.href='{{ url_for('fruit_list') }}';" value="Abandonner" />
+			  </td></tr>
+	    </table>
+	    </form>
+   </body>
+</html>

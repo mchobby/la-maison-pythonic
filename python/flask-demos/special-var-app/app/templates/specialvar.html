@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+      <title>Demo Special Var</title>
+   </head>
+   <style>
+		body {
+		    background-color: darkgrey;
+		}
+
+		p#tooltip {
+		  border: 1px solid #333;
+		  box-shadow: 8px 8px 5px #444;
+		  padding: 8px 12px;
+		  background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc);
+		}
+   </style>
+   <body>
+   		<h1>Affichage des variables spéciales</h1>
+        <p id="tooltip">
+            Cet exemple montre comment accéder aux différentes 
+            variables spéciales disponibles dans un template Jinja.<br />
+            <br />
+            N'importe quelle URL peut être saisie comme par exemple:<br /> 
+        	<a href="/acajou/15/Demo?g=1&a=12" >/acajou/15/Demo?g=1&amp;a=12</a>
+        </p>
+		<h2>Variable g</h2>
+		{{ g }}
+		<ul>
+			{% for item in g %}
+			   <li>{{ item }} = {{ g[item] }}</li>
+			{% endfor %}
+		</ul>
+		<h2>Variable request</h2>
+		Objet request : {{ request }}
+		<h3>request caractéristiques</h3>
+		<ul>
+		    <li>request.scheme = {{ request.scheme }}</li>
+		    <li>request.url = {{ request.url }}</li>
+		    <li>request.url_root = {{ request.url_root }}</li>
+		    <li>request.path = {{ request.path }}</li>
+        	<li>request.query_string = {{ request.query_string }}</li>
+        	<li>request.user_agent = {{ request.user_agent }}</li> 
+        </ul>		
+		
+		{# Extract the Arguments like:}
+		   request.args.get('a') #}
+
+		<h3>request cookies</h3>
+		{% if request.cookies %}
+        	<ul>
+        	{% for item in request.cookies %}
+        		<li>{{ item }} = {{ request.cookies[item] }}</li>
+        	{% endfor %}
+        	</ul>
+		{% endif %}
+
+		<h3>request args</h3>
+		{% if request.args %}
+        	<ul>
+        	{% for item in request.args %}
+        		<li>{{ item }} = {{ request.args[item] }}</li>
+        	{% endfor %}
+        	</ul>
+		{% endif %}
+		<h2>variable session</h2>
+		{{ session|default('session is not defined!') }}
+		<h2>variable Environment</h2>
+		{{ Environment|default('Environment is not defined!') }}
+		<h2>variable config</h2>
+		<ul>
+			{% for item in config %}
+	       		<li>{{ item }} = {{ request.args[item] }}</li>		 
+			{% endfor %}
+		</ul>
+
+   </body>
+</html>
+<!DOCTYPE html>
+<html>
+<body>
+</body>
+</html>

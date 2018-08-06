@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% set title = "Accueil" %}
+{% block content %}
+    <p>
+      Cette application permet de découvrir les possibilités du Flash Message (<em>Message Flashing</em>). Les boutons ci-dessous conduisent vers des pages qui produisent des Flashs messages.
+    </p>
+    <input type="button" value="Saisir Nom" onclick="location.href='{{ url_for("edit_name") }}';" /> 
+    <input type="button" value="Saisir Message" onclick="location.href='{{ url_for("edit_message") }}';" /> 
+{% endblock %}

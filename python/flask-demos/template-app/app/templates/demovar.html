@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+      <title>Demo var</title>
+   </head>
+   <body>
+        <h1>Dit bonjour</h1>
+		{% if name %}
+		  <p>Bonjour {{ name }}!</p>
+		{% else %}
+		  <p>Bonjour à tous!</p>
+		{% endif %}      
+		<h1>Fruits</h1>
+		<ul>
+			{% for el in elements %}
+			<li>{{ el }}</li>
+			{% endfor %}
+		</ul>
+   </body>
+</html>

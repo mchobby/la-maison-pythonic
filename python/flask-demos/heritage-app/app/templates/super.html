@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Super Block{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        p.local-def { 
+        	color: #007700; 
+        	background-color: #FFFF00;
+        	padding: 25px 25px 25px 25px;
+        	border-style: solid;
+        	border-width: 2px;
+        	border-color: #007700;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <h1>Utilisation du Super Block</h1>
+    <p>
+      Cette page utilise l'héritage des templates Jinja mais en redéfinissant une partie du bloc <strong>head</strong> afin d'y ajouter des définitions de style CSS.
+    </p>
+    <p>L'appel de {{ '{{' }} super() {{ '}}' }} dans le bloc <strong>head</strong> permet d'évaluer et insérer le contenu du bloc <strong>head défini dans le "tempate de base"<strong>.</p>
+
+    <p class="local-def">Ce &lt;p&gt; utilise la classe CSS <strong>local-def</strong> ajoutée dans le bloc <strong>head</strong>.</p>
+{% endblock %}

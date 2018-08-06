@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+      <title>Fruit list</title>
+   </head>
+   <body>      
+		<h1>Fruits</h1>
+		<table border="1">
+			<tr>
+	   			<th>Nom</th>
+	   			<th>KCal / 100gr</th>
+	   			<th>Options</th>
+	 		</tr>
+			{% for el in rows %}
+				<tr>
+				<td>{{ el[1] }}</td>
+				<td align="right">{{ el[2] }}</td> 
+				<td><small>
+				  <a href="{{ url_for('fruit_edit', id=el[0]) }}">Editer</a> 
+				  <a href="{{ url_for('fruit_delete', id=el[0]) }}">Effacer</a>
+				  </small></td>
+				</tr>
+			{% endfor %}
+			<tr><td align="right" colspan="3">
+			  <small>
+			  <a href="{{ url_for('fruit_edit') }}">Nouveau</a>
+			  </small></td></tr>
+	    </table>
+   </body>
+</html>

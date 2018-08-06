@@ -1,0 +1,39 @@
+body {
+    background-color: darkgrey;
+}
+
+h1 {
+    color: navy;
+    margin-left: 20px;
+}
+
+ul.flashes { 
+  background-color: #B6F7B8; 
+  padding: 8px 10px; 
+  border: 1px solid #30C164; 
+  margin-left: 10px; 
+  margin-bottom:10px; 
+  border-radius:5px;
+}
+
+ul.flashes li {
+  margin-left: 12px; 
+}
+
+ul.flashes li.error {
+  color: red; 
+  font-weight: bold;
+}
+
+div#content {
+  border: 1px solid #333;
+  box-shadow: 8px 8px 5px #444;
+  padding: 8px 12px;
+  background-image: linear-gradient(180deg, #fff, #ddd 40%, #ccc);
+}
+
+div#footer {
+  width: 100%;
+  text-align: center;
+  padding-top: 20px;
+}

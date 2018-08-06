@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+   <header>
+      {% block head %}
+      <link rel="stylesheet" type="text/css" 
+            href="{{ url_for( 'static', filename='style.css' ) }}" />
+      <title>{{ title }} - Flash-Message-App</title>
+      {% endblock %}
+   </header>
+   <body>
+   <h1>{{ title }}</h1>
+   {# Affichage des Flash Message #}
+   {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class=flashes>
+        {% for categ, message in messages %}
+          {% if categ == 'error' %}
+            {% set cls = 'error' %}
+          {% else %}
+            {% set cls = '' %}
+          {% endif %}
+          <li class="{{ cls }}">{% if categ == 'error' -%}
+              [{{ categ | upper }}]
+              {% endif %} {{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    {# Affichage du contenu #}
+    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="footer">
+        {% block footer %}
+        -- La Maison Pythonic @ <a href="https://github.com/mchobby/la-maison-pythonic">GitHub</a> --
+        {% endblock %}
+    </div>
+   </body>
+</html>

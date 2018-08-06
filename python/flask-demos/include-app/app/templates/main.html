@@ -1,0 +1,6 @@
+{% include 'page_header.html' %}
+<p>Ceci est un exemple d'inclusion de template Jinja.<p>
+<p>Le template "page_header.html" prend en charge le rendu jusqu'à la balise &lt;body&gt; et &lt;h1&gt; incluse.</p>
+<p>Le template "page_footer.html" prend la fin de la page html à partir du tag en &lt;/body&gt;</p>
+<p>De surcroît, cette exemple démontre que le template inclus peut évaluer les variables Jinja comme la balise {{'{{'}} titre {{'}}'}} évaluée à "{{ titre|default("") }}"</p>
+{% include 'page_footer.html' %}

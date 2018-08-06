@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% set title = "Editer Nom" %}
+{% block content %}
+    <form action="{{ url_for('save_name') }}" method="post">
+    <table>
+      <tr><td>Saisir nom</td>
+          <td><input type="text" name="name" value="Saisir un nom" /></td>
+      </tr>
+      <tr><td colspan="2">
+      	 <input type="submit" name="act" value="Envoyer" />
+      	 <input type="submit" name="act" value="Abandonner" />
+     </td></tr>
+    </table>
+    </form>    
+{% endblock %}
