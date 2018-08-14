@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% import "macro/M_input.macro" as M_input %}
+{% import "macro/block.macro" as Block %}
+{% if row['id'] | default("", true) == "" %}
+   {% set title = "Nouveau Bloc" %}
+{% else %}
+   {% set title = "Modifier Bloc" %}
+{% endif %}
+{% set dash_color = dashboard.color %}
+{% block actions %}
+{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="row">
+        <form action="{{ url_for('block_add', dash_id = row['dash_id']) }}" method="post" class="col s12">
+
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="title" name="title" type="text" class="validate" value="{{ row['title'] | default("",true) }}"><input id="id" name="id" type="hidden" value="{{ row['id'] | default("",true) }}"><input id="dash_id" name="dash_id" type="hidden" value="{{ row['dash_id'] | default("",true) }}"><input id="origin" name="origin" type="hidden" value="{{ origin }}">
+                    <label for="title">Titre bloc</label>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="input-field col s12">
+                    <select id="source" name="source">
+                      <option value="" disabled {% if not(row['source']) %}selected{% endif %}>Choisir une source</option>
+                      {% for item in data_sources %}
+                            <option value="{{ item }}" {% if row['source'] %}selected{% endif %}>{{ item }}</option>
+                      {% endfor %}
+                    </select>
+                    <label>Source de données</label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="input-field col s12">
+                    <select id="topic" name="topic">
+                      <option value="" disabled {% if not(topics) %}selected{% endif %}>Choisir un topic</option>
+                      {# Should be completed on the fly with JavaScript code for new record! #}
+                      {%- if topics -%}
+                            {# topics are filled when editing an existing record so draw them #}
+                            {%- for item in topics -%}
+                                <option value="{{ item['topic'] }}" {% if item['topic']==row['topic'] %}selected{% endif %}>{{ item['topic'] }}</option>
+                            {% endfor -%}
+                      {%- endif -%}
+                    </select>
+                    <label>Topic</label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="input-field col s12">
+                    {{ M_input.select_block_type( "block_type", current=row['block_type'] ) | safe }}
+                    <label>Type de bloc</label>
+                </div>
+            </div>
+            <div class="row">   
+                <div class="input-field col s12">   
+                    {{ M_input.select_color( "color", current=row['color'] ) | safe }}
+                    <label>Couleur du fond</label> 
+                </div>
+            </div>
+            <div class="row">                     
+                <div class="input-field col s12">
+                    {{ M_input.select_color( "colortext", current=row['color_text'] ) | safe }}
+                    <label>Couleur du texte</label> 
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    {{ M_input.select_icon( "icon", current=row['icon'] ) | safe }}
+                    <label>Icon</label>
+                </div>
+            </div>
+
+            {# To do: configure the History-View (if it applies) #}
+            <input id="hist_type" name="hist_type" type="hidden" value="{{ row['hist_type'] | default("",true) }}">
+            <input id="hist_size" name="hist_size" type="hidden" value="{{ row['hist_size'] | default(50,true) }}">
+            {# To do: configure the block parameters (python dictionnary) within a TextArea #}
+            <input id="block_config" name="block_config" type="hidden" value="{{ row['block_config'] | default("",true) }}">
+            
+
+            {# Submit button #}
+            <div class="row">
+                <button class="btn waves-effect waves-light red right" type="submit" name="action" value="cancel">Abandonner
+                    <i class="material-icons right">close</i>
+                </button>
+                <button class="btn waves-effect waves-light green right" type="submit" name="action" onclick="return checkSubmit();" value="submit">Sauver
+                    <i class="material-icons right">check</i>
+                </button>        
+            </div>
+
+        </form>            
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+    $(function() {
+        $("#source").on('change', function() {
+            console.debug( 'source changed' );
+            loadTopics();
+        });
+    });
+
+    function loadTopics( ) {
+            // reload the content of topics list bases on the selection of the source
+            runningRequest = true;
+
+            // create an url like /source/__/topics where __ must still be 
+            // replaced
+            var baseUrl = '{{ url_for('source_topics', source_name='__') }}';
+      
+            request = $.ajax({
+                type: 'GET',
+                url: baseUrl.replace( '__', $('#source').val() ),
+                success: function( data ){
+                   console.debug('get Ajax response');
+                   if ( !$.isEmptyObject(data)) {
+                     // return [ {topic:x, history:y}, ... ]
+                     console.debug( 'get a result' );
+                     var select = $('#topic');
+                     select.empty();
+                     select.append( $("<option></option>").
+                                   attr("disabled", "disabled").
+                                   attr("selected","selected").
+                                   text("Choisir un topic")
+                                  );  
+                     for( var value in data ){
+                         console.debug( "Add value "+data[value]['topic'] );
+                         select.append( $("<option></option>").
+                                        attr("value", data[value]['topic']).
+                                        text( data[value]['topic'] )
+                                      );
+                     }
+                     // update the content (previously .material_select() )
+                     select.formSelect();
+                   }
+                   else {
+                     console.error( 'AJAX: contenu vide!' );
+                     M.toast({html: 'AJAX: contenu vide!', classes:'red'});
+                   }  
+                },
+                complete: function(){
+                  runningRequest = false;
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    console.error( 'AJAX Error! Status:'+ xhr.status );
+                    console.error(  thrownError );
+                    M.toast({html: 'Erreur AJAX!<br />Status:'+xhr.status+'<br />Message:'+thrownError, 
+                             displayLength : 10000, classes:'red'});
+                }       
+            })    
+        }
+
+    function checkSubmit(){
+        var bError = false;
+        if ( $("#title").val().trim().length == 0 ){
+            M.toast( { html: 'Le bloc doit avoir un titre', classes : 'red' } );
+            bError = true;
+        }
+        if ( !( $("#block_type").val() ) ){
+            M.toast( { html: 'Le bloc doit avoir un type', classes : 'red' } );
+            bError = true;
+        }
+        if ( !( $("#source").val() ) ){
+            M.toast( { html: 'Le bloc doit avoir une source de donnée', classes : 'red' } );
+            bError = true;
+        }
+        if ( !( $("#topic").val() ) ){
+            M.toast( { html: 'Le bloc doit avoir un topic', classes : 'red' } );
+            bError = true;
+        }
+        return !(bError);
+    }
+    
+{% endblock %}

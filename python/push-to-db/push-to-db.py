@@ -1,4 +1,4 @@
-w#!/usr/bin/python
+#!/usr/bin/python
 # -*- coding: utf8 -*-
 """ La Maison Pythonic - push-to-db  
 
@@ -123,16 +123,19 @@ class QueuedMessage( object ):
 	    leurs traitements (enregistrement en DB par le thread MessageLazyWriter) 
 	"""
 
-	__slots__ = ['receive_time', 'topic', 'payload', 'sub_handler', 'qos']
+	__slots__ = ['receive_time', 'topic', 'payload', 'sub_handler', 'qos', 'timeserie_sub_handlers']
 
-	def __init__(self, receive_time, topic, payload, qos, sub_handler ):
+	def __init__(self, receive_time, topic, payload, qos, sub_handler, timeserie_sub_handlers = None ):
 		self.receive_time = receive_time
 		self.topic = topic
 		self.payload = payload
 		self.qos = qos
-		# Une des classe MqttXxxCapture "subscripter handler class" capable
+		# Une des classes MqttXxxCapture "subscripter handler class" capable
 		# d'utiliser d'écrire le message en DB en utilisant son connecteur. 
 		self.sub_handler = sub_handler
+		# Les objets MqttTimeserieCapture (et descendant) "subscripter handler class" 
+		# ayant également stocké le même message que pour le sub_hander. NB: les messages sont stockés en timeserie avant le stockage en capture. 
+		self.timeserie_sub_handlers = timeserie_sub_handlers
 
 # -------------------------------------------------------------------------------
 #
@@ -217,9 +220,18 @@ class MqttTopicCapture( MqttBaseCapture ):
 		""" traite le message capturé pour l'enregistré à l'aide du connecteur! 
 
 		MqttTopicCapture enregistre juste la dernière valeur dans la table."""
+
+		# Est-ce que le message à également été stocké dans une ou plusieurs tables timeserie ? ... sur le même connecteur?
+		tsname = None
+		if queued_message.timeserie_sub_handlers:
+			# Uniquement les timeserie_sub_handler partageant la même db (donc le même storage_connector [le nom]) 
+			for ts_sub_handler in [ sub_handler for sub_handler in queued_message.timeserie_sub_handlers if sub_handler.storage_connector == self.storage_connector ]:
+				# Juste recupérer le 1ier nom de table 
+				tsname = ts_sub_handler.storage_table
+				break;
 		# Le connecteur sait comment accéder à la table
 		self.connector.update_value( self.storage_table, queued_message.receive_time, 
-			queued_message.topic, queued_message.payload, queued_message.qos )
+			queued_message.topic, queued_message.payload, queued_message.qos, tsname = tsname )
 
 class MqttTimeserieCapture( MqttBaseCapture ):
 	""" Classe gérant la capture des messages et stockage de la dernière valeur dans une table """
@@ -279,19 +291,29 @@ class SqliteConnector( BaseConnector ):
 			# sauver les modifications
 			self._conn.commit()
 
-	def update_value( self, table_name, receive_time, topic, payload, qos ):
+	def update_value( self, table_name, receive_time, topic, payload, qos, tsname=None ):
 		""" Stocke la dernière valeur connue dans la table """
 		logging.getLogger('connector').debug( 'update_value() on sqlite' )
 
-		sSql = "UPDATE %s SET message = ?, qos = ?, rectime = ? where topic = ?" % table_name
+		if tsname:
+			# Sauver le nom du TimeSerie si on l'a sous la main
+			sSql = "UPDATE %s SET message = ?, qos = ?, rectime = ?, tsname = ?  where topic = ?" % table_name
+			_data = (payload, qos, receive_time, tsname, topic)
+		else:
+			sSql = "UPDATE %s SET message = ?, qos = ?, rectime = ? where topic = ?" % table_name
+			_data = (payload, qos, receive_time, topic)
 
 		self.connect()
 		cur = self._conn.cursor()
-		r = cur.execute( sSql, (payload, qos, receive_time, topic) )
+		r = cur.execute( sSql, _data )
 		# Si record pas encore mis-à-jour --> insérer
 		if r.rowcount == 0:
-			sSql = "INSERT INTO %s (topic,message,qos,rectime) VALUES (?,?,?,?)" % table_name
-			r = cur.execute( sSql, (topic,payload,qos,receive_time) )
+			if tsname:
+				sSql = "INSERT INTO %s (topic,message,qos,rectime, tsname) VALUES (?,?,?,?,?)" % table_name
+				r = cur.execute( sSql, (topic,payload,qos,receive_time, tsname) )			
+			else:
+				sSql = "INSERT INTO %s (topic,message,qos,rectime) VALUES (?,?,?,?)" % table_name
+				r = cur.execute( sSql, (topic,payload,qos,receive_time) )
 
 	def timeserie_append( self, table_name, receive_time, topic, payload, qos ):
 		""" Stocke l'historique de valeurs (timeseries) dans la table """
@@ -493,11 +515,28 @@ class App:
 					if not( target_id in to_call ):
 						to_call[target_id] = sub_handler
 
-			for target_id, sub_handler in to_call.items():
+			# Handle TimeSerie capture first
+			queued_timeserie = []
+			for target_id, sub_handler in to_call.items() : 
+				if not isinstance( sub_handler, MqttTimeserieCapture ):
+					continue
 				to_queue = QueuedMessage( receive_time=datetime.datetime.now(), \
 					topic=message.topic, payload=message.payload, \
 					qos=message.qos, sub_handler=sub_handler  )
 				self.message_queue.put( to_queue )
+				# Remember the queued timeserie for this message
+				queued_timeserie.append( sub_handler )
+			
+			# Handle Message Capture after
+			for target_id, sub_handler in to_call.items() : 
+				if isinstance( sub_handler, MqttTimeserieCapture ):
+					continue
+				to_queue = QueuedMessage( receive_time=datetime.datetime.now(), \
+					topic=message.topic, payload=message.payload, \
+					qos=message.qos, sub_handler=sub_handler, \
+					timeserie_sub_handlers=queued_timeserie if len(queued_timeserie)>0 else None  )
+				self.message_queue.put( to_queue )
+
 				#sub_handler.process_message( message.topic, message.payload )
 
 		except Exception as err:

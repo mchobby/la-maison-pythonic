@@ -1,0 +1,39 @@
+{% extends "demo/demo_base.html" %}
+{% set title = '.:Demo:. Page Principale' %}
+{% set dash_color = 'indigo lighten-2' %}
+{% block content %}
+<div class="row">
+    <div class="center blocs col s12 m4 l3">
+        <h4>Météo</h4>
+        <i class="material-icons" style="font-size:6rem;">wb_sunny</i>
+        <br>
+        <h5>12°C</h5>
+    </div>
+    <div class="center blocs col s12 m4 l3">
+        <h4>Lights</h4>
+        <i class="material-icons" style="font-size:6rem;">wb_incandescent</i>
+        <div class="switch">
+            <label>
+                Off
+                <input type="checkbox">
+                <span class="lever"></span>
+                On
+            </label>
+        </div>
+        <p class="foot">57 seconds ago</p>
+    </div>
+    <div class="center blocs large col s12 m4 l3">
+        <h4>Ext Temp</h4>
+        <h2>28°C</h2><br>
+        <p class="foot">58 seconds ago</p>
+    </div>
+    <div class="center blocs col s12 m4 l3">
+        <h4>Music</h4>
+        <i class="material-icons" style="font-size:6rem;">library_music</i>
+    </div>
+    <div class="center blocs col s12 m4 l3">
+        <h4>Météo</h4>
+        <i class="material-icons" style="font-size:6rem;">wb_sunny</i>
+    </div>
+</div>
+{% endblock %}        

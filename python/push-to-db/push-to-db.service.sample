@@ -1,0 +1,11 @@
+[Unit]
+Description=MQTT database storage service for la-maison-pythonic project
+After=multi-user.target 
+Wants=mosquitto.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python /home/pi/la-maison-pythonic/python/push-to-db/push-to-db.py
+
+[Install]
+WantedBy=multi-user.target

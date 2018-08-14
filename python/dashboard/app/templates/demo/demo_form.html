@@ -1,0 +1,61 @@
+{% extends "demo/demo_base.html" %}
+{% set title = '.:Demo:. Formulaire' %}
+{% set dash_color = 'red darken-2' %}
+{% block content %}
+<div class="row">
+    <div class="row">
+        <form class="col s12">
+            <div class="row">
+                <div class="input-field col s6">
+                    <input placeholder="Placeholder" id="first_name" type="text" class="validate">
+                    <label for="first_name">Prénom</label>
+                </div>
+                <div class="input-field col s6">
+                    <input id="last_name" type="text" class="validate">
+                    <label for="last_name">Nom</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <input disabled value="I am not editable" id="disabled" type="text" class="validate">
+                    <label for="disabled">Désactivé</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="password" type="password" class="validate">
+                    <label for="password">Mot de passe</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="email" type="email" class="validate">
+                    <label for="email">Email</label>
+                </div>
+            </div>
+            <div class="row">   
+                <div class="input-field col s12">   
+                    <select>
+                        <option value="" disabled selected>Choisir une option</option>
+                        <option value="1">Option 1</option>
+                        <option value="2">Option 2</option>
+                        <option value="3">Option 3</option>
+                    </select>
+                    <label>Sélection par liste</label> 
+                </div>
+            </div>
+            <div class="row">   
+                    <label>Sélection avec browser-default</label>
+                    <select class="browser-default" id="myselect2">
+                        <option value="" disabled selected>Choisir une option</option>
+                        <option value="1">Option 1</option>
+                        <option value="2">Option 2</option>
+                        <option value="3">Option 3</option>
+                    </select>
+                <div class="input-field col s12">     
+                </div>
+            </div>
+        </form>            
+    </div>
+</div>
+{% endblock %}

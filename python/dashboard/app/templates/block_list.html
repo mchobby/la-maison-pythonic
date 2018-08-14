@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% set title = "Modifier les blocs de %s" % dash.label %}
+{% set title_url = url_for( 'dashboard', id=dash['id'] ) %}
+{% set dash_color = dash.color %}
+{% block actions %}
+	<li><a href="{{ url_for('block_add', dash_id=dash['id']) }}"><i class="material-icons">add</i></a></li>
+    <li><a href="{{ url_for('dashboard', id=dash['id']) }}"><i class="material-icons">undo</i></a></li>
+{% endblock %}
+{% block content %}
+<div class="row">
+    {% if block_list | length <= 0 %}
+    <div class="col s12">
+      <div class="amber lighten-3">
+        <div class="card-content black-text">
+          <span class="card-title"><strong>Truc et astuce</strong></span>
+          <p>Il n'y a pas encore de dashboard disponible.<br />Cliquer sur l'icone '+' en haut à droite pour ajouter un premier block au dashboard.<br/></p>
+        </div>
+      </div>
+    </div>    
+    {% endif %}
+    
+    <ul class="collection">
+        {% for r in block_list -%}
+            {% set url_del = url_for('block_delete', dash_id=r['dash_id'], block_id=r['id']) %}
+            {% set url_edit = url_for('block_add', dash_id=r['dash_id'], block_id=r['id']) %}
+        	{% if not(r['icon']) or (r['icon'] | length <= 0) %}
+        	    {% set icon = "crop_free" %}
+        	{% else %}
+                {% set icon = r['icon'] %}
+        	{% endif %}
+				<li class="collection-item {{ r['color'] }}">
+				<div>
+				<a href="{{ url_edit }}" class="secondary-content left {{ r['color_text'] | default('black', true) }}-text">
+				<i class="material-icons">{{ icon }}</i>
+				</a>
+				<a href="{{ url_edit }}" class="{{ r['color_text'] | default('black', true) }}-text" >
+				&nbsp;&nbsp;{{ r['title'] }}
+				</a>
+				<a href="{{ url_del }}" class="secondary-content {{ r['color_text'] | default('black', true) }}-text">
+				<i class="material-icons">delete</i>
+				</a>
+				<a href="{{ url_edit }}" class="secondary-content {{ r['color_text'] | default('black', true) }}-text">
+				<i class="material-icons">edit</i>
+				</a>				
+				</div></li>
+
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

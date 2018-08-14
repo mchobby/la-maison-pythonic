@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% set title = application.label | default( 'Pythonic', True ) %}
+{% set dash_color = application.color %}
+{% block actions %}
+	<li><a href="{{ url_for('app_config') }}"><i class="material-icons">build</i></a></li>
+	<li><a href="{{ url_for('dashboard_add') }}"><i class="material-icons">add</i></a></li>
+{% endblock %}
+{% block content %}
+<div class="row">
+    {% if dash_list | length <= 0 %}
+    <div class="col s12">
+      <div class="amber lighten-3">
+        <div class="card-content black-text">
+          <span class="card-title"><strong>Truc et astuce</strong></span>
+          <p>Il n'y a pas encore de dashboard disponible.<br />Cliquer sur l'icone '+' en haut à droite pour ajouter un premier dashboard.<br/></p>
+        </div>
+      </div>
+    </div>    
+    {% endif %}
+
+    <ul class="collection with-header">
+        <li class="collection-header"><h4>Dashboards</h4></li>
+        {% for r in dash_list -%}
+            {% if r['label'] | special_page  %}
+                {% set url = url_for('special_page', name=r['label'] | special_page ) %}
+            {% else %}
+                {% set url = url_for('dashboard', id=r['id']) %}
+            {% endif %}
+            {% set url_del = url_for('dashboard_delete', id=r['id']) %}
+            {% set url_edit = url_for('dashboard_add', id=r['id']) %}
+        	{% if not(r['icon']) or (r['icon'] | length <= 0) %}
+        	    {% set icon = "visibility" %}
+        	{% else %}
+                {% set icon = r['icon'] %}
+        	{% endif %}
+				<li class="collection-item {{ r['color'] }}">
+				<div>
+				<a href="{{ url }}" class="secondary-content left {{ r['color_text'] | default('black', true) }}-text">
+				<i class="material-icons">{{ icon }}</i>
+				</a>
+				<a href="{{ url }}" class="{{ r['color_text'] | default('black', true) }}-text" >
+				&nbsp;&nbsp;{{ r['label'] }}
+				</a>
+				<a href="{{ url_del }}" class="secondary-content {{ r['color_text'] | default('black', true) }}-text">
+				<i class="material-icons">delete</i>
+				</a>
+				<a href="{{ url_edit }}" class="secondary-content {{ r['color_text'] | default('black', true) }}-text">
+				<i class="material-icons">edit</i>
+				</a>				
+				</div></li>
+
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

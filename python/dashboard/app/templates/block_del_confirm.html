@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% set title = "Effacer Bloc" %}
+{% set dash_color = application.color %}
+{% block actions %}
+{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="row">
+
+    <form action="{{ url_for('block_delete', dash_id=row['dash_id'], block_id=row['id']) }}" method="post">
+    <div class="col s12">
+      <div class="red darken-1">
+        <div class="card-content white-text">
+          <span class="card-title"><h4>Effacer {{ row.title }}</h4></span>
+          <p>Voulez-vous vraiment effacer le bloc "{{ row.title }}" du dashboard?<br/></p>
+        </div>
+        <div class="card-action">
+            {# Submit Button #}
+            <button class="btn waves-effect waves-light green ligthen-5 right" type="submit" name="action" value="cancel">Abandonner
+                <i class="material-icons right">close</i>
+            </button>
+            <button class="btn waves-effect waves-light red right" type="submit" name="action" value="submit">Effacer
+                <i class="material-icons right">check</i>
+            </button>  
+        </div>
+      </div>
+    </div>
+    </form>
+</div></div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% set title = "Spécial: Topics" %}
+{% set title_url = url_for( 'main' ) %}
+{% set dash_color = application.color %}
+{% block actions %}
+    <li><a href="{{ url_for('main') }}"><i class="material-icons">undo</i></a></li>
+    <li><a href="{{ url_for('special_page', name="TOPICS") }}"><i class="material-icons">refresh</i></a></li>
+{% endblock %}
+{% block content %}
+<div class="row">
+
+  <div class="col s12">
+  <table>
+    <thead>
+    <tr class="black white-text"><th colspan="6">Topics: {{ source }}</th></tr>
+    <tr class="black white-text">
+        <th>Topic<i class="material-icons right">arrow_drop_up</i></th>
+        <th>Message</th>
+        <th>QoS</th>
+        <th>Date</th>
+        <th>Age</th>
+        <th>tsname</th></tr>
+    </thead>
+    <tbody>
+    {% for row in rows %}
+    <tr class="{{ loop.cycle('white', 'grey lighten-2') }}"><td>{{ row['topic'] }}</td>
+        <td>{{ row['message'] }}</td>
+        <td>{{ row['qos'] }}</td>
+        <td>{{ row['rectime'] | strftime(format="full", source_type="sqlite_dt") }}</td>
+        <td>{{ row['rectime'] | strftime( format="elapse", source_type="sqlite_dt" ) }}</td>
+        <td>{{ row['tsname'] }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+{% endblock %}

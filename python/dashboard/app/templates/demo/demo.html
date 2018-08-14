@@ -1,0 +1,41 @@
+{% extends "demo/demo_base.html" %}
+{% set title = "Materialize demo" %}
+{% block content %}
+<div class="row">
+    <div class="center blocs col s12 m4 l3">
+    <a href="{{ url_for('demo_main') }}" class="black-text">
+        <h4>Main</h4>
+        <i class="material-icons" style="font-size:6rem;">link</i>
+        <p class="foot">Page principale</p>
+    </a>
+    </div>
+    <div class="center blocs col s12 m4 l3">
+    <a href="{{ url_for('demo_list') }}" class="black-text">
+        <h4>List</h4>
+        <i class="material-icons" style="font-size:6rem;">link</i>
+        <p class="foot">Liste</p>
+    </a>
+    </div>
+    <div class="center blocs col s12 m4 l3">
+    <a href="{{ url_for('demo_form') }}" class="black-text">
+        <h4>Form</h4>
+        <i class="material-icons" style="font-size:6rem;">link</i>
+        <p class="foot">Formulaire</p>
+    </a>
+    </div>
+    <div class="center blocs col s12 m4 l3">
+    <a href="https://material.io/tools/icons/?style=baseline" class="black-text" target="_blank">
+        <h4>Icon</h4>
+        <i class="material-icons" style="font-size:6rem;">crop_original</i>
+        <p class="foot">Icones</p>
+    </a>
+    </div>
+    <div class="center blocs col s12 m4 l3">
+    <a href="https://materializecss.com/color.html" class="black-text" target="_blank">
+        <h4>Colors</h4>
+        <i class="material-icons" style="font-size:6rem;">crop_original</i>
+        <p class="foot">Couleurs CSS</p>
+    </a>
+    </div>    
+</div>
+{% endblock %}        

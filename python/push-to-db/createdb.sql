@@ -32,3 +32,11 @@ create table ts_chauf (
   qos integer,
   rectime integer
 );
+
+create table ts_connect (
+  id integer primary key,
+  topic text,
+  message text,
+  qos integer,
+  rectime integer
+);

@@ -1,0 +1,31 @@
+{#  == MATERIALIZE INPUT MACRO =========================== #}
+{% import "macro/block.macro" as Block %}
+{# In the lists here under, the format is ('diplay_text', 'item_code') . The item_code is also the base for the ressoure filename. #}
+{% macro select_color( name, current=None ) %}
+	{% set colors=[('rouge','red'),('rose','pink'),('pourpre','purple'),('pourpre foncé', 'deep-purple'), ('indigo','indigo'), ('bleu', 'blue'), ('bleu léger', 'light-blue'),('cyan','cyan'),('bleu pétrole','teal'), ('vert','green'), ('vert léger', 'light-green'), ('citron', 'lime'), ('jaune', 'yellow'), ('ambre', 'amber'), ('orange', 'orange'), ('orange foncé', 'deep-orange'), ('brun','brown'), ('gris', 'grey'), ('gris bleu', 'blue-grey'), ('noir','black'), ('blanc','white')] %}
+    <select id="{{ name }}" name="{{ name }}" class="icons">
+        <option value="" disabled {% if current == None %}selected{% endif %}>Choisir une couleur</option>
+        {% for color in colors %}
+        <option value="{{ color[1] }}" data-icon="{{ url_for( 'static', filename='images/colors/'+color[1]+'.png') }}" {% if current == color[1] %}selected{% endif %}>{{ color[0] }}</option>
+        {% endfor %}
+    </select>
+{% endmacro %}
+
+{% macro select_icon( name, current=None ) %}
+	{% set icons=[('accessibility','accessibility'),('ac_unit','ac_unit'), ('adb','adb'), ('alarm','alarm'), ('alternate_email','alternate_email'), ('apps','apps'),('assignment','assignment'), ('attach_file','attach_file'),('battery_80','battery_80'), ('beach_access','beach_access'),('block','block'), ('bluetooth_audio','bluetooth_audio'),('blur_on','blur_on'), ('bookmark_border','bookmark_border'),('bookmark','bookmark'), ('bookmarks','bookmarks'), ('brightness_2','brightness_2'), ('bubble_chart','bubble_chart'),('build','build'), ('call','call'), ('camera_alt','camera_alt'), ('camera_enhance','camera_enhance'), ('child_friendly','child_friendly'), ('cloud_off','cloud_off'), ('cloud','cloud'), ('code','code'), ('commute','commute'), ('date_range','date_range'), ('description','description'), ('directions_boat','directions_boat'),('directions_bus','directions_bus'), ('directions_car','directions_car'), ('directions_subway','directions_subway'), ('dns','dns'), ('favorite','favorite'), ('filter_drama','filter_drama'), ('filter_vintage','filter_vintage'), ('flight','flight'), ('forward','forward'), ('headset','headset'), ('hearing','hearing'), ('home','home'), ('hotel','hotel'), ('kitchen','kitchen'), ('landscape','landscape'), ('language','language'), ('laptop','laptop'), ('link_off','link_off'), ('link','link'), ('local_dining','local_dining'), ('local_drink','local_drink'), ('local_offer','local_offer'), ('local_shipping','local_shipping'), ('location_city','location_city'), ('menu','menu'), ('more_horiz','more_horiz'), ('more_vert','more_vert'), ('move_to_inbox','move_to_inbox'), ('nfc','nfc'), ('notification_important','notification_important'), ('notifications_active','notifications_active'),('notifications_none','notifications_none'), ('notifications_off','notifications_off'), ('notifications_paused','notifications_paused'), ('notifications','notifications'), ('pool','pool'), ('print','print'), ('report','report'), ('room','room'), ('schedule','schedule'), ('sd_card','sd_card'), ('security','security'), ('send','send'), ('sentiment_satisfied_alt','sentiment_satisfied_alt'), ('settings','settings'), ('settings_power','settings_power'), ('sms_failed','sms_failed'), ('sms','sms'), ('supervisor_account','supervisor_account'), ('texture','texture'), ('timeline','timeline'), ('toggle_off','toggle_off'),  ('toggle_on','toggle_on'), ('traffic','traffic'), ('usb','usb'), ('videogame_asset','videogame_asset'), ('volume_up','volume_up'), ('vpn_key','vpn_key'), ('warning','warning'), ('waves','waves'), ('wb_sunny','wb_sunny')] %}
+    <select id="{{ name }}" name="{{ name }}" class="icons">
+        <option value="" disabled {% if current == None %}selected{% endif %}>Choisir une icone</option>
+        {% for icon in icons %}
+        <option value="{{ icon[1] }}" data-icon="{{ url_for( 'static', filename='images/icons/M/'+icon[1]+'.png') }}" {% if current == icon[1] %}selected{% endif %}>{{ icon[0] }}</option>
+        {% endfor %}
+    </select>
+{% endmacro %} 
+
+{% macro select_block_type( name, current=None ) %}
+    <select id="{{ name }}" name="{{ name }}" class="icons">
+        <option value="" disabled {% if current == None %}selected{% endif %}>Choisir un type de bloc</option>
+        {% for block_type in Block.block_types %}
+        <option value="{{ block_type }}" data-icon="{{ url_for( 'static', filename='images/block_types/'+block_type+'.png') }}" {% if current == block_type %}selected{% endif %}>{{ block_type }}</option>
+        {% endfor %}
+    </select>
+{% endmacro %}

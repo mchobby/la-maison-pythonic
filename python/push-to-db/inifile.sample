@@ -45,6 +45,16 @@ subscribe=maison/cave/chaufferie/etat,maison/cave/chaufferie/temp-eau
 class=MqttTimeserieCapture
 storage=sqlitedb.ts_chauf
 
+[mqtt.capture.4]
+subscribe=connect/#
+class=MqttTopicCapture
+storage=sqlitedb.topicmsg
+
+[mqtt.capture.5]
+subscribe=connect/#
+class=MqttTimeserieCapture
+storage=sqlitedb.ts_connect
+
 [loggers]
 ; root - logger de l'application
 ; connector - logger des connecteurs DB

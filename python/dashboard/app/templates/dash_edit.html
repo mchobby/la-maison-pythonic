@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% import "macro/M_input.macro" as M_input %}
+{% if row['id'] | default("", true) == "" %}
+   {% set title = "Nouveau Dashboard" %}
+{% else %}
+   {% set title = "Modifier Dashboard" %}
+{% endif %}
+{% set dash_color = application.color %}
+{% block actions %}
+{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="row">
+        <form action="{{ url_for('dashboard_add') }}" method="post" class="col s12">
+
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="label" name="label" type="text" class="validate" value="{{ row['label'] | default("",true) }}"><input id="id" name="id" type="hidden" value="{{ row['id'] | default("",true) }}">
+                    <label for="label">Libellé du dashboard</label>
+                </div>
+            </div>
+            <div class="row">   
+                <div class="input-field col s12">   
+                    {{ M_input.select_color( "color", current=row['color'] ) | safe }}
+                    <label>Couleur du fond</label> 
+                </div>
+            </div>
+            <div class="row">                     
+                <div class="input-field col s12">
+                    {{ M_input.select_color( "colortext", current=row['color_text'] ) | safe }}
+                    <label>Couleur du texte</label> 
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    {{ M_input.select_icon( "icon", current=row['icon'] ) | safe }}
+                    <label>Icon</label>
+                </div>
+            </div>
+
+            {# Submit button #}
+            <div class="row">
+                <button class="btn waves-effect waves-light red right" type="submit" name="action" value="cancel">Abandonner
+                    <i class="material-icons right">close</i>
+                </button>
+                <button class="btn waves-effect waves-light green right" type="submit" name="action" value="submit">Sauver
+                    <i class="material-icons right">check</i>
+                </button>        
+            </div>
+
+        </form>            
+    </div>
+</div>
+{% endblock %}

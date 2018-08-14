@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% import "macro/block.macro" as Block %}
+{% set title = dashboard.label %}
+{% set title_url = url_for('dashboard', id=dashboard.id ) %}
+{% set dash_color = dashboard.color %}
+{% block actions %}
+    <li><a href="{{ url_for('block_list', dash_id = dashboard.id) }}"><i class="material-icons">build</i></a></li>
+    <li><a href="{{ url_for('block_add', dash_id = dashboard.id) }}"><i class="material-icons">add</i></a></li>
+    <li><a href="{{ url_for('dashboard', id = dashboard.id) }}"><i class="material-icons">refresh</i></a></li>
+{% endblock %}
+{% block content %}
+<div class="row">
+    {% if block_with_data_list | length <= 0 %}
+    <div class="col s12">
+      <div class="amber lighten-3">
+        <div class="card-content black-text">
+          <span class="card-title"><strong>Truc et astuce</strong></span>
+          <p>Il n'y a pas encore de bloc dans le dashboard.<br />Cliquer sur l'icone '+' en haut à droite pour ajouter un premier bloc.<br/></p>
+        </div>
+      </div>
+    </div>    
+    {% endif %}
+    {% for bwd in block_with_data_list %}
+
+       <div id="an_id_block" class="center blocs col s12 m4 l3 {{ bwd.block['color'] }}">
+          {#- bwd = Block With Data -#}
+          {%- if bwd.block_data['tsname'] -%}
+       		<a href="{{ url_for( 'topic_history', dash_id=dashboard.id, block_id=bwd.block['id'], _from=0, _len=bwd.block['hist_size'] ) }}"><span class="new badge black white-text" data-badge-caption=""><i class="material-icons">zoom_in</i></span></a>
+          {%- endif -%}
+          {{ Block.make_block( bwd.block['block_type'], bwd.block['id'], bwd.block['title'], bwd.block_data['value'], {'color':bwd.block['color'], 'color_text':bwd.block['color_text'], 'icon':bwd.block['icon'], 'rectime':bwd.block_data['rectime']} ) | safe }}
+       </div>
+
+    {% endfor %}
+</div>
+{% endblock %}
+{% block onDocumentReady %}
+	setTimeout(function(){
+	  window.location.reload();
+	}, {{ configuration.refresh_time*1000 }} );
+{% endblock %}

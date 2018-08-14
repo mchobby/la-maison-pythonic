@@ -1,0 +1,44 @@
+# coding: utf8
+import sys
+
+# Default dashboard.cfg file that should be stored in /etc/pythonic/ to override content
+# 
+db='/var/local/sqlite/dashboard.db'
+db_class='DashboardDB'
+
+# Sources - the sources of data
+data_sources = [ 'db_pythonic' ]
+
+# Access to the collected topics (see push-to-db.py)
+#
+db_pythonic='/var/local/sqlite/pythonic.db'
+db_pythonic_class = 'PythonicDB'
+
+# Refresh Time in sec (eg: reload the dashboard)
+refresh_time=120 
+
+#
+SECRET_KEY = b'dezaijéàç684894zeaé@a9rè!tgeankeazopfr)àei'
+
+# Config pour capturer tous les logs
+logger_config = {
+    'version': 1,
+    'formatters': {
+		'default': {
+        	'format': '[%(asctime)s] x %(levelname)s in %(module)s: %(message)s',
+        }
+    },
+    'handlers': {
+		'wsgi': {
+			'class': 'logging.StreamHandler',
+			'stream': sys.stdout, #'ext://flask.logging.wsgi_errors_stream',
+			'formatter': 'default'
+		}
+	},
+	'loggers' : {
+	    'root': {
+    		'level': 'DEBUG',
+        	'handlers': ['wsgi']
+    	}
+    }
+}
