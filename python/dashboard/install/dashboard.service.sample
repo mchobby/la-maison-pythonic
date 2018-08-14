@@ -1,0 +1,12 @@
+[Unit]
+Description=Dashboard (Flask) for la-maison-pythonic project
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python /home/pi/la-maison-pythonic/python/dashboard/runapp.py
+WorkingDirectory=/home/pi/la-maison-pythonic/python/dashboard/
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
