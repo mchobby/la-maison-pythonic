@@ -21,7 +21,7 @@ cursor = conn.cursor()
 
 cursor.execute( 
 	"insert into fruits (name,kcal_100gr) values (?, ?)",
-	(fruit_name.encode('UTF-8'), fruit_kcal)
+	(fruit_name.decode('UTF-8'), fruit_kcal)
 	)
 if cursor.rowcount > 0:
 	print( "Enregistrement inséré" )
