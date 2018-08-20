@@ -27,6 +27,8 @@ def special_page( name ):
 		source_db = get_db( sources[0] )
 		topic_rows = source_db.get_values( topic_list = None )
 		return render_template( 'special/topic_list.html',  application=application, source=sources[0], rows=topic_rows  )
+	elif name == 'DEMO':
+		return render_template( 'demo/demo.html' )
 	
 	flash( "Pas de page speciale pour {%s}" % name )
 	return redirect(url_for('main'))
