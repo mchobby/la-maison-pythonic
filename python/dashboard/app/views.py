@@ -105,7 +105,6 @@ def dashboard_add( id=None ):
 			return render_template( 'dash_edit.html', row=row, application=application  )
 	else:
 		# --- POST ---------------------------------------------------
-		print( request.form )
 		if( request.form['action'] == u'cancel' ):
 			# Abandon
 			return redirect(url_for('main'))
