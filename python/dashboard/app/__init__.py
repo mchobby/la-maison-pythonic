@@ -14,7 +14,7 @@ if os.path.exists( CONFIG_FILE ):
 	print( 'config loaded from %s' % CONFIG_FILE)
 	# Load configuration in memory
 	import imp
-	configuration = imp.load_source( 'configuration', 'app/dashboard.cfg.default' )
+	configuration = imp.load_source( 'configuration', CONFIG_FILE )
 else:
 	# Load the default file
 	print( 'loading config from dashboard.cfg.default')
