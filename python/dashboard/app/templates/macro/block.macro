@@ -10,7 +10,7 @@
 
 {% set block_types = ['icon', 'big_text', 'switch'] %}
 
-{% set mqtt_required_blocks = ['switch'] }
+{% set mqtt_required_blocks = ['switch'] %}
 
 {% macro make_block( block_type, id, title, label, params ) %}
    {% if not(block_type in block_types) %}
