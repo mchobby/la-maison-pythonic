@@ -43,8 +43,8 @@ def topic_history( dash_id, block_id, _from=0, _len=None ):
 	values    = db_source.get_values( [topic] )
 	tsname    = values[0]['tsname']
 	hist_rows = db_source.get_history( tsname=tsname, topic=topic, from_id = None if _from <= 1 else _from, _len=hist_size )
-	print( type(hist_rows[0]["rectime"]) )
-	print( hist_rows[0]["rectime"] )
+	# print( type(hist_rows[0]["rectime"]) )
+	# print( hist_rows[0]["rectime"] )
 	if hist_type=='LIST':
 		return render_template( 'history/list.html', block=block, dash=dash, rows=hist_rows, _from=_from, _len=hist_size )
 	else:

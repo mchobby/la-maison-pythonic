@@ -27,6 +27,10 @@ echo "Install push-to-db.log in /var/log/pythonic/"
 sudo mkdir /var/log/pythonic
 sudo chgrp staff /var/log/pythonic
 sudo chmod g+rw /var/log/pythonic
+
+# reload user configuration (and groups)
+exec su -l $USER
+
 # owner and group  would be the current user (pi)
 touch /var/log/pythonic/push-to-db.log
 # Set permission to -rw-rw-r--

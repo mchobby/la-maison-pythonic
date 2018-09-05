@@ -21,12 +21,17 @@ sudo chmod g+rwx /var/local/sqlite
 echo "Install dashboard.ini to /etc/pythonic/"
 # file in /etc/pythonic/dashboard.ini can be read by user pi
 sudo mkdir /etc/pythonic
-sudo cp config.sample /etc/pythonic/dashboard.cfg
+# The default configuration is read from the app directory
+# sudo cp config.sample /etc/pythonic/dashboard.cfg
 
 echo "Install dashboard.log in /var/log/pythonic/"
 sudo mkdir /var/log/pythonic
 sudo chgrp staff /var/log/pythonic
 sudo chmod g+rw /var/log/pythonic
+
+# reload user and group 
+exec su -l $USER
+
 # owner and group  would be the current user (pi)
 touch /var/log/pythonic/dashboard.log
 # Set permission to -rw-rw-r--

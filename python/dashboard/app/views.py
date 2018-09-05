@@ -177,7 +177,7 @@ def dashboard( id ):
 
 	# === Retreive the data for the blocks ====================================
 	_source_topics  = [ (block['id'], block['source'], block['topic']) for block in block_list ]
-	# will be a dictionnary {'id':<block_id>, 'block_data':<block_data>}.  
+	# will be a dictionnary of {'id':<block_id>, 'block_data':<block_data>}.  
 	# A <bloc_data> is a dictionnary of { 'id':<block_id>, 'topic': <topic_name>, 'value':<data_value>, 'history':<tsname> }
 	_block_data  = {}
 	# For each source (collect all topics at once)
