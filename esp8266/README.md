@@ -18,7 +18,7 @@ D'autres sous-répertoires contiennent des ressources complémentaires:
 # Ressources MicroPython pour ESP8266
 
 MC Hobby consacre une partie de son Wiki à l'utilisation de MicroPython sur ESP8266
-* voir (ESP8266 en MicroPython](https://wiki.mchobby.be/index.php?title=MicroPython-Accueil#ESP8266_en_MicroPython)
+* voir [ESP8266 en MicroPython](https://wiki.mchobby.be/index.php?title=MicroPython-Accueil#ESP8266_en_MicroPython)
 
 Le GitHub uPy-ESP8266 contient des exemples et pilotes MicroPython à utiliser avec ESP8266 et autres plateforme MicroPython.
 * Voir [GitHub uPy-ESP8266](https://github.com/mchobby/esp8266-upy) 
