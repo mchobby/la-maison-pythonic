@@ -74,12 +74,17 @@
                 </div>
             </div>
 
+            {# To do: configure the block parameters (like python dictionnary) within a TextArea #}
+            <div class="row">
+                <div class="input-field col s12">
+                    <textarea id="block_config" name="block_config" style="height: 15rem;">{{ row['block_config'] | default("",true) }}</textarea>
+                    <label>Configuration (json format)</label>
+                </div>
+            </div>
+
             {# To do: configure the History-View (if it applies) #}
             <input id="hist_type" name="hist_type" type="hidden" value="{{ row['hist_type'] | default("",true) }}">
-            <input id="hist_size" name="hist_size" type="hidden" value="{{ row['hist_size'] | default(50,true) }}">
-            {# To do: configure the block parameters (python dictionnary) within a TextArea #}
-            <input id="block_config" name="block_config" type="hidden" value="{{ row['block_config'] | default("",true) }}">
-            
+            <input id="hist_size" name="hist_size" type="hidden" value="{{ row['hist_size'] | default(50,true) }}">          
 
             {# Submit button #}
             <div class="row">
@@ -172,6 +177,22 @@
             M.toast( { html: 'Le bloc doit avoir un topic', classes : 'red' } );
             bError = true;
         }
+        // check JSON
+        var jsontext = $('#block_config')[0].value;
+        console.log( 'text:'+jsontext );
+        var tojson;
+        if( jsontext.length>0 ) 
+          try {
+              var tojson = JSON.parse( jsontext );
+          }
+          catch( err ){
+              console.error( 'error parsing JSON configuration param! '+err );
+              M.toast( { html: 'Configuration (JSON) incorrect', classes : 'red' } );
+              M.toast( { html: err, classes : 'red' } );
+              bError = true;
+          }
+        console.log( tojson );
+
         return !(bError);
     }
     

@@ -52,11 +52,50 @@ def get_db( db_key ):
    return db_helper
 
 def get_data_sources():
-   """ List the sources available in the config file """
+   """ List the databases sources available in the config file """
    data_sources = getattr( configuration, 'data_sources' ) 
    assert data_sources, "No data_sources defined in the config file"
    assert type( data_sources ) == list, "the config file data_sources must be a list of string"
    return data_sources
+
+def get_mqtt_sources( as_dict = False ):
+   """ List the MQTT server sources available in the config file 
+
+   :param as_dict: False -> returns a list of string (like get_data_source does). True -> return a dictionnary of dictionnary to embed the configuration parameters
+   :type as_dict: boolean 
+   :return: a list of string -OR- { '<mqtt_source_1>' : {'server':<mqtt_server>, 'port':..., 'username':..., 'passwd':....} , 
+                                    '<mqtt_source_2>' : {...}  
+                                  }
+   """
+   def extract_config( key, default='_' ):
+      """ Extract a named value from configuration """
+      try:
+         _result = getattr( configuration, key )
+      except:
+         if default=='_':
+            raise GetDbError( 'Missing %s entry in configuration file!' % key )
+         else:
+            _result = default
+      return _result
+
+   mqtt_sources = getattr( configuration, 'mqtt_sources' )
+   if not( mqtt_sources ):
+      mqtt_sources =  []  
+   assert type( mqtt_sources ) == list, "the config file mqtt_sources must be a list of string"
+
+   if not( as_dict ):
+      return mqtt_sources
+   else:
+      _dic = {}
+      for _source in mqtt_sources:
+         _params = {}
+         _params['server']  = extract_config( _source )
+         _params['port']    = extract_config( '%s_port' % _source )
+         _params['username']= extract_config( '%s_username' % _source, None )
+         _params['passwd']  = extract_config( '%s_passwd'   % _source, None )
+         _dic[_source] = _params
+      return _dic
+
 
 class DashboardDB( object ):
    """ Helper class to easily request data """

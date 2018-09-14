@@ -5,6 +5,7 @@
    * id    : unique identifier used to name the items (for Javascript coding). Suffix must me added to the inner components
    * title : the title displayed on the top of the block
    * label : the text content to display in the block (or bottom of it)
+   * config: block config (undefined or JSON structure encoded within the block_config field)
    * param : dictionnary of additionnal parameter (like the "icon" name for the block_icon macro)
 #}
 
@@ -12,27 +13,24 @@
 
 {% set mqtt_required_blocks = ['switch'] %}
 
-{% macro make_block( block_type, id, title, label, params ) %}
+{% macro make_block( block_type, id, title, label, config, params ) %}
    {% if not(block_type in block_types) %}
-        {{ block_error( "Error", "'%s' block_type is not registered in the block_types Jinja variable" % block_type, None ) }}
+        {{ block_error( "Error", "'%s' block_type is not registered in the block_types Jinja variable" % block_type, config, None ) }}
    {% elif block_type == 'icon' %}
-   		{{ block_icon( id, title, label, params ) }}
+   		{{ block_icon( id, title, label, config, params ) }}
    {% elif block_type == 'big_text' %}
-      {{ block_big_text( id, title, label, params ) }}
+      {{ block_big_text( id, title, label, config, params ) }}
    {% elif block_type == 'switch' %}
-      {{ block_switch( id, title, label, params ) }}
+      {{ block_switch( id, title, label, config, params ) }}
    {% else %}
-        {{ block_error( id, "Error", "make_bloc Jinja macro does not know how to handle block_type="+block_type, None ) }}
+        {{ block_error( id, "Error", "make_block Jinja macro does not know how to handle block_type="+block_type, config, None ) }}
    {% endif %}
 {% endmacro %}
 
 {# params['icon'] : name of the icon to display  
    params['rectime'    ] : datetime of the information record time (displayed in the footer) 
-   params['tsname'     ] : nom du timeserie (historique des valeurs (si disponible) ) 
-   params['hist_type'  ] : type d'affichage de l'historique 
-   params['hist_size'  ] : taille du record size affiché 
 #}
-{% macro block_icon( id, title, label, params ) %}
+{% macro block_icon( id, title, label, config, params ) %}
 	<h4 class="{{ params['color_text'] }}-text">{{ title }}</h4>
 	<i class="material-icons {{ params['color_text'] }}-text" style="font-size:6rem;">{{ params['icon'] }}</i>
 	<br>
@@ -44,7 +42,7 @@
 
 {# params['footer_text'] : text to display in the footer of the block  
    params['rectime'    ] : datetime of the information record time (displayed in the footer)  #}
-{% macro block_big_text( id, title, label, params ) %}
+{% macro block_big_text( id, title, label, config, params ) %}
   <h4 class="{{ params['color_text'] }}-text">{{ title }}<h4>
   <h2 class="{{ params['color_text'] }}-text">{{ label }}</h2>
   <p id="{{ id }}_footer" class="foot class="{{ params['color_text'] }}-text">{{ params['footer_text'] }}</p>
@@ -55,24 +53,24 @@
 
 {# params['footer_text'] : text to display in the footer of the block 
    params['rectime'    ] : datetime of the information record time (displayed in the footer) #}
-{% macro block_switch( id, title, label, params ) %}
+{% macro block_switch( id, title, label, config, params ) %}
   <h4>{{ title }}</h4>
-  <i class="material-icons" style="font-size:6rem;">wb_incandescent</i>
+  <i class="material-icons" style="font-size:6rem;">{{ params['icon'] }}</i>
   <div class="switch">
       <label>
           Off
-          <input type="checkbox">
+          <input type="checkbox" id="checkbox_switch_{{ id }}" {% if config.switch and config.switch.check == label %} checked {% endif %}>
           <span class="lever"></span>
           On
       </label>
   </div>
-  <p id="{{ id }}_footer"  class="foot">*** Jinja macro block_switch UNDER CONSTRUCT *** {{ label }} {{ params['footer_text'] }}</p>
+  <p id="{{ id }}_footer"  class="foot">{{ label }} {{ params['footer_text'] }}</p>
   {% if params['rectime'] %}
       <p id="{{ id }}_rectime_footer" class="foot">{{ params['rectime'] | strftime("elapse") }}</p>
   {% endif %}
 {% endmacro %}
 
-{% macro block_error( id, title, label, params ) %}
+{% macro block_error( id, title, label, config, params ) %}
 	<h4>{{ title }}</h4>
 	<p>{{ label }}</p>
 {% endmacro %}

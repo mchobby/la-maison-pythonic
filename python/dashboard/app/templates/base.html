@@ -52,6 +52,8 @@
       <!--Import jQuery before materialize.js-->
       <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
       <script type="text/javascript" src="{{ url_for( 'static', filename='js/materialize.min.js') }}"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" ></script>
+      <script type="text/javascript" src="{{ url_for( 'static', filename='js/block.js') }}" ></script>
       <script type="text/javascript">
       <!--
          M.AutoInit();
@@ -76,6 +78,12 @@
             {%- endif -%}
           {%- endwith -%}
           // M.toast({html: 'Flash done'});
+
+          {#- Attach event to switch_block #}
+          $('[id^="checkbox_switch_"]').each( function(){ 
+            console.log( 'attach onchange to ' + $(this)[0].id );
+            $(this)[0].onchange = on_switch_change
+          } );
 
           {#- Custom onDocumentReady Javascrit content -#}
           {% block onDocumentReady %}{% endblock %}

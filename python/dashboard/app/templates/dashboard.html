@@ -27,13 +27,26 @@
           {%- if bwd.block_data['tsname'] -%}
        		<a href="{{ url_for( 'topic_history', dash_id=dashboard.id, block_id=bwd.block['id'], _from=0, _len=bwd.block['hist_size'] ) }}"><span class="new badge black white-text" data-badge-caption=""><i class="material-icons">zoom_in</i></span></a>
           {%- endif -%}
-          {{ Block.make_block( bwd.block['block_type'], bwd.block['id'], bwd.block['title'], bwd.block_data['value'], {'color':bwd.block['color'], 'color_text':bwd.block['color_text'], 'icon':bwd.block['icon'], 'rectime':bwd.block_data['rectime']} ) | safe }}
+          {{ Block.make_block( bwd.block['block_type'], bwd.block['id'], bwd.block['title'], bwd.block_data['value'], bwd.block_config , {'color':bwd.block['color'], 'color_text':bwd.block['color_text'], 'icon':bwd.block['icon'], 'rectime':bwd.block_data['rectime']} ) | safe }}
        </div>
 
     {% endfor %}
 </div>
 {% endblock %}
 {% block onDocumentReady %}
+  block_configs = {};
+  {#- Block_config JSON Data (available to JavaScript code) #}
+  {% for bwd in block_with_data_list %}
+     {% if bwd.block['block_config'] %}
+     block_configs['{{ bwd.block['id'] }}'] = JSON.parse( {{ bwd.block['block_config'] | tojson }} );
+     {% else %}
+     block_configs['{{ bwd.block_data['id'] }}'] = undefined;
+     {% endif %}
+  {% endfor %}
+
+  {#- Inject MQTT definition #}
+  mqtt_sources = {{ mqtt_sources | tojson }};
+
 	setTimeout(function(){
 	  window.location.reload();
 	}, {{ configuration.refresh_time*1000 }} );

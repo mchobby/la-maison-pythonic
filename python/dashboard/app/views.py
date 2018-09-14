@@ -1,8 +1,8 @@
 # coding: utf8
 from app import configuration
 from app import app
-from flask import render_template, request, redirect, url_for, flash, abort, Response
-from models import get_db, get_data_sources
+from flask import render_template, request, redirect, url_for, flash, abort, Response, jsonify, make_response
+from models import get_db, get_data_sources, get_mqtt_sources
 import json
 from datetime import datetime
 
@@ -162,18 +162,21 @@ def dashboard( id ):
 		""" carry block info (row) and block_data info (dict) """
 		block = None
 		block_data = None
+		block_config = None # Block_config JSON string as Python structure
 
-		def __init__( self, block, block_data ):
+		def __init__( self, block, block_data, block_config ):
 			self.block = block
 			self.block_data = block_data
+			self.block_config = block_config 
 
 		def __repr__( self ):
-			return '<block: %r, block_data: %r>' % (self.block, self.block_data)
+			return '<block: %r, block_data: %r, block_config: %s>' % (self.block, self.block_data, self.block_config)
 
 	db = get_db('db')	
 	application = db.application()
 	dashboard   = db.get_dash( id )
 	block_list  = db.get_dash_blocks( id )
+	mqtt_sources= get_mqtt_sources( as_dict = True )
 
 	# === Retreive the data for the blocks ====================================
 	_source_topics  = [ (block['id'], block['source'], block['topic']) for block in block_list ]
@@ -205,8 +208,15 @@ def dashboard( id ):
 	# Adding the data INSIDE each block_list's row
 	block_with_data_list = []
 	for row in block_list:
-		#try:
-		block_with_data_list.append( BlockWithData( block=row, block_data=_block_data[row['id']] ) )
+		try:
+			_block_config = {} if row['block_config']==None or len( row['block_config'] )==0 else json.loads( row['block_config'] )
+		except Exception as err:
+			app.logger.error( 'Failed to convert JSON block_config for block %s to Python structure.' % row['id'] ) 
+			app.logger.error( 'due to error %s on %s' % (err,row['block_config']) ) 
+			_block_config = { '_error' : ['unable to convert json block_config for block %s to python structure'% row[id],
+			                              'due to error %s on %s' % (err,row['block_config']) ] 
+			                }
+		block_with_data_list.append( BlockWithData( block=row, block_data=_block_data[row['id']], block_config=_block_config ) )
 		#except:
 		#	setattr( row, 'block_data', None ))
 
@@ -215,7 +225,8 @@ def dashboard( id ):
 		block_with_data_list = block_with_data_list, 
 		dashboard  = dashboard, 
 		application= application,
-		configuration=configuration )
+		configuration=configuration,
+		mqtt_sources=mqtt_sources )
 
 #-------------------------------------------------------
 #  BLOCK LIST
@@ -325,3 +336,68 @@ def source_topics( source_name ):
 @app.route('/app/config', methods=['GET','POST'] )
 def app_config():
 	abort( Response('La page permettant de configurer l application n est pas encore développée!') )
+
+#-------------------------------------------------------
+#  Mqtt Publish Proxy
+#-------------------------------------------------------
+# As mentionned in block.js::on_switch_change(event)
+#    // On 06/09/2017, Javascript Paho Mqtt Client rely on WebSocket 
+#    //    Mosquitto does support it by adding the following
+#    //    configuration to the /etc/mosquitto/mosquitto.conf
+#    //       port 1883
+#    //       listener 9001
+#    //       protocol websockets 
+#    //    Unfortunately, on this days, the libwebsockets 2.1.0 as
+#    //       uncompatibility with mosquitto 1.4 causing error message 
+#    //       " Error: AMQJS0011E Invalid state not connected. "
+#    //       Downgrading to libwebsockets 2.0.2 seems to solve the issue
+#    //       but that's not an easy work on a Raspberry Pi.
+#    //    The best would certainly to wait for libwebsockets 2.1.1 
+#    //       that fix the issue.
+#    //
+#    //    More information: https://github.com/eclipse/mosquitto/issues/336
+#    //
+#    //    Workaround: rely on the Flask APP to rely the MQTT Publish
+#
+@app.route( '/MqttProxyPublish', methods=['POST'] )
+def mqtt_publish_proxy():
+	data = request.data
+	app.logger.debug( u'MqttProxyPublish for %s'% data )
+	try:
+		dataDict = json.loads(data)
+	except Exception as err:
+		return make_response( (u'Invalid JSON format. %s'%err, 400) )
+	
+	# Must have the needed items
+	# data = {"source":"mqtt_pythonic","topic":"maison/cave/chaufferie/cmd","msg":"ARRET"}
+	try:
+		assert 'source' in dataDict, "JSON: 'source' manquante." 
+		assert 'topic'  in dataDict, "JSON: 'topic' manquante."
+		assert 'msg'    in dataDict, "JSON: 'msg' manquante."
+	except Exception as err:
+		return make_response( (u'JSON format invalide. %s'%err,400) )
+
+	_source = dataDict['source']
+	_topic  = dataDict['topic']
+	_msg    = dataDict['msg']
+
+	try:
+		mqtt_info = get_mqtt_sources(as_dict=True)[_source]
+	except:
+		return make_response( (u'Source invalide!', 400) )
+
+	try:
+		import paho.mqtt.client as mqtt_client
+		client = mqtt_client.Client( client_id="dashboard_MqttProxyPublish" )
+		if mqtt_info['username']:
+			client.username_pw_set( username=mqtt_info['username'],
+									password=mqtt_info['passwd'])
+		client.connect( host=mqtt_info['server'], port=mqtt_info['port'] )
+		client.publish( _topic, _msg ) # QoS 0
+	except Exception as err:
+		app.logger.error( 'MqttProxyPublish failed to relay to the broker for %s' % data  )
+		app.logger.error( err )
+		make_response( ( u'Erreur Broker! %s'%err , 400) )
+
+	return make_response( (u'%s envoyé!'%_msg , 200 ) )
+

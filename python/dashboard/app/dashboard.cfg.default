@@ -14,6 +14,15 @@ data_sources = [ 'db_pythonic' ]
 db_pythonic='/var/local/sqlite/pythonic.db'
 db_pythonic_class = 'PythonicDB'
 
+# Sources - the MQTT sources
+#   allows block to interact with mqtt servers
+mqtt_sources = [ 'mqtt_pythonic' ]
+
+mqtt_pythonic = 'pythonic.local' # Mqtt server
+mqtt_pythonic_port = 1883
+mqtt_pythonic_username = 'pusr103'
+mqtt_pythonic_passwd   = '21052017' 
+
 # Refresh Time in sec (eg: reload the dashboard)
 refresh_time=120 
 
