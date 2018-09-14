@@ -20,7 +20,11 @@ La lecture des différents chapitres offrira de solides bases de connaissances e
 
 Le cas échéant, ce savoir permettra de comprendre ce qui se passe sous le capot de solutions « clé sur porte ». 
 
-__Le code source de ce GitHub correspondant au livre__ est disponible dans l'archive [la-maison-pythonic-(master-livre).zip](res/la-maison-pythonic-(master-livre).zip) . 
+__Le code source de ce GitHub correspondant au livre__ est disponible dans l'archive [la-maison-pythonic-(master-livre).zip](https://github.com/mchobby/la-maison-pythonic/raw/master/res/la-maison-pythonic-(master-livre).zip) . 
+
+# Installation 
+
+Voir [les notes d'installation rapide](res/install-rapide.md)
 
 # Le projet en quelques images
 
