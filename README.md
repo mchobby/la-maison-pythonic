@@ -37,23 +37,23 @@ Voir [les notes d'installation rapide](res/install-rapide.md)
 
 # Matériel 
 Vous trouverez facilement nécessaire chez les distributeurs Adafruit. Voici une proposition de lien:
-* {{pl|846|Feather ESP8266 Huzzah}} - plateforme certifiée distribuée dans le monde entier! 
+* [Feather ESP8266 Huzzah](https://shop.mchobby.be/feather/846-feather-huzzah-avec-esp8266-3232100008465-adafruit.html) - plateforme certifiée distribuée dans le monde entier! 
 * LED et Bouton, résistance pull-up et déparasitage logiciel
-* {{pl|33|Potentiomètre}} sur l'entrée analogique
-* {{pl|218|MCP23017}} pour ajouter des entrées sorties
-* {{pl|362|ADS1115}} pour ajouter des entrées analogiques
-* {{pl|59|TMP36}} pour mesurer la température (en analogique)
-* {{pl|259|DS18B20}} (et {{pl|151|DS18B20 water-proof}}) mesure de température (numérique, OneWire)
-* {{pl|61|Senseur PIR}} pour détecter les mouvements à proximité
-* {{pl|911|Contact magnétique}} pour détecter l'ouverture d'une porte
-* {{pl|708|DHT11}} (ou {{pl|219|DHT22}})pour la mesure d'humidité
-* {{pl|932|AM2315}} senseur d'humidité et T° weather-proof.
-* {{pl|86|Senseur à Effet Hall}} pour la détection de présence de champs magnétique.
-* {{pl|238|TSL2561}} pour la mesure de luminosité
-* {{pl|684|BME280}} pour la mesure de pression Atmosphérique, Température, Humidité
-* {{pl|1118|BMP280}} pour la mesure de pression Atmosphérique et T°
-* RELAIS {{pl|107|module Relais}} ou {{pl|507|Bi-Relais}} pour commander des appareils.
-* {{pl|58|PHOTO-RESISTANCE}}
+* [Potentiomètre](https://shop.mchobby.be/autres/33-potentiometre-breadboard-10k-3232100000339.html) sur l'entrée analogique
+* [MCP23017](https://shop.mchobby.be/ci/218-mcp23017-extension-16-entree-sortie-i2c-3232100002180.html) pour ajouter des entrées sorties
+* [ADS1115](https://shop.mchobby.be/breakout/362-ads1115-convertisseur-adc-16bits-i2c-3232100003620-adafruit.html) pour ajouter des entrées analogiques
+* [TMP36](https://shop.mchobby.be/senseur-divers/59-senseur-temperature-tmp36-3232100000599.html) pour mesurer la température (en analogique)
+* [DS18B20](https://shop.mchobby.be/senseur-divers/259-senseur-temperature-ds12b20-extra-3232100002593.html) (et [DS18B20 water-proof](https://shop.mchobby.be/senseur-divers/151-senseur-temperature-ds18b20-etanche-extra-3232100001510.html) ) mesure de température (numérique, OneWire)
+* [Senseur PIR](https://shop.mchobby.be/mouvement/61-senseur-proximite-mouvement-infrarouge-3232100000612.html) pour détecter les mouvements à proximité
+* [Contact magnétique](https://shop.mchobby.be/proximite/911-contact-porte-magnetique-3232100009110.html) pour détecter l'ouverture d'une porte
+* [DHT11](https://shop.mchobby.be/senseurs-prototypage/708-dht11-senseur-humidite-temperature--3232100007086-adafruit.html) (ou [DHT22](https://shop.mchobby.be/senseurs-prototypage/214-dht22-am2302-senseur-humidite-temperature--3232100002142-adafruit.html) ) pour la mesure d'humidité
+* [AM2315](https://shop.mchobby.be/senseur-divers/932-am2315-senseur-de-temperature-et-humidite-sous-boitier-3232100009325.html) senseur d'humidité et T° weather-proof.
+* [Senseur à Effet Hall](https://shop.mchobby.be/proximite/86-senseur-effet-hall-us5881lua-extra-3232100000865.html) pour la détection de présence de champs magnétique.
+* [TSL2561](https://shop.mchobby.be/senseur-divers/238-senseur-lux-luminosite-lumiere-digital-3232100002388-adafruit.html) pour la mesure de luminosité
+* [BME280](https://shop.mchobby.be/breakout/684-bme280-sens-temperature-humidite-pression--3232100006843-adafruit.html) pour la mesure de pression Atmosphérique, Température, Humidité
+* [BMP280](https://shop.mchobby.be/senseurs-prototypage/1118-bmp280-senseur-de-pression-barometrique-temperature-altitude-33-et-5v-3232100011182-adafruit.html) pour la mesure de pression Atmosphérique et T°
+* RELAIS [module Relais](https://shop.mchobby.be/breakout/107-module-relais-3232100001077-pololu.html) ou [Bi-Relais](https://shop.mchobby.be/breakout/507-module-deux-relais-3232100005075-pololu.html) pour commander des appareils.
+* [PHOTO-RESISTANCE](https://shop.mchobby.be/senseur-divers/58-photo-resistance-3232100000582.html)
 
 # Le projet en quelques images
 
