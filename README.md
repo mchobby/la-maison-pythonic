@@ -74,4 +74,5 @@ Les tableaux de bords (projet "Dashboard", Python + Flask + Materialize)
 # Annexes
 * [Installation Rapide](res/install-rapide.md)
 * [Mode Hors Ligne](res/mode-hors-ligne.md) 
+* [MQTT Track](res/mqtt_track.sh) - suivre les messages sur le broker MQTT.
 

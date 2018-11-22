@@ -131,7 +131,7 @@ Redémarrer le service push-to-db
 ### Démarrer dashboard avec SystemD
 Installer le fichier de configuration
 ```
-cp ~/la-maison-pythonic/python/dashboard/install/dashboard.service.sample /lib/systemd/system/dashboard.service
+sudo cp ~/la-maison-pythonic/python/dashboard/install/dashboard.service.sample /lib/systemd/system/dashboard.service
 sudo chmod 644 /lib/systemd/system/dashboard.service
 ```
 Recharger la configuration SystemD
