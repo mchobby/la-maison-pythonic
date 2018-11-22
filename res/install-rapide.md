@@ -48,6 +48,20 @@ Il sera probablement nécessaire de renommer le répertoire d'extraction afin qu
 
 `mv la-maison-pythonic-master la-maison-pythonic`
 
+### La copie avec block Switch (sur GitHub)
+La copie à l'édition du livre ne contient pas le développement du block "Switch" et action `/MqttProxyPublish`. Ceux-ci fut complété en fin de chapitre 7, modification à saisir à la main.
+
+Vous pouvez néamnoins télécharger cette archive intégrant les modifications et base de données de démonstration correspondate en saissisant la commande: 
+```
+cd  ~
+wget "https://github.com/mchobby/la-maison-pythonic/raw/master/res/la-maison-pythonic-(Switch-MqttProxyPublish).zip"
+```
+Une fois l'archive téléchargée, les sources peuvent être extraites à l'aide de la commande
+
+`unzip -e "la-maison-pythonic-(Switch-MqttProxyPublish).zip"`
+
+Puis poursuivre le point précédent pour finaliser la mise en place.
+
 ### Depuis le GitHub du Projet ###
 
 Le projet la-maison-pythonic est également disponible sur le dépôt GitHub. Ce dernier ayant continué ses évolutions depuis la sortie de l'ouvrage.
