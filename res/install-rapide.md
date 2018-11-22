@@ -6,7 +6,6 @@ Installer le système d'exploitation sur le Raspberry-Pi avec les caratéristiqu
 * Hostname: pythonic 
 * Adresse IP: fixe sur 192.168.1.210)
 
-
 ## Installation partie 1
 
 ### Installer Mosquitto
@@ -37,13 +36,17 @@ Redémarrer Mosquitto
 Saisir la commande suivante pour récupérer l'archive
 ```
 cd  ~
-wget https://github.com/mchobby/la-maison-pythonic/raw/master/res/la-maison-pythonic-(master-livre).zip
+wget "https://github.com/mchobby/la-maison-pythonic/raw/master/res/la-maison-pythonic-(master-livre).zip"
 ```
 Une fois l'archive téléchargée, les sources peuvent être extraites à l'aide de la commande
 
-`unzip -e la-maison-pythonic-(master-livre).zip`
+`unzip -e "la-maison-pythonic-(master-livre).zip"`
 
 Une fois le contenu de l'archive extrait, le répertoire utilisateur doit contenir un répertoire __la-maison-pythonic__ avec les sources du projet.
+
+Il sera probablement nécessaire de renommer le répertoire d'extraction afin qu'il dispose du nom correcte.
+
+`mv la-maison-pythonic-master la-maison-pythonic`
 
 ### Depuis le GitHub du Projet ###
 
@@ -64,6 +67,7 @@ Une fois l'opération terminée, le répertoire utilisateur doit contenir un ré
 ```
 cd ~/la-maison-pythonic/python/push-to-db/
 ./setup.sh
+sudo pip install paho-mqtt
 ```
 
 _Il est possible que le script soit dans l'impossibilité de créer la base de donnée (voir message en fin de script). Cela est dût au fait que le script attache l'utilisateur pi à un nouveau groupe mais que cette modification ne soit instantanément effective. Par conséquent, il faut dé-loguer l'utilisateur pi puis re-loguer l'utilisateur pi avant de relancer le script une seconde fois._
@@ -80,7 +84,7 @@ Le script doit afficher différents messages au démarrage et à la réception d
 ### Démarrer push-to-db avec SystemD
 Installer le fichier de configuration
 ```
-cp ~/la-maison-pythonic/python/push-to-db/push-to-db.service.sample /lib/systemd/system/push-to-db.service
+sudo cp ~/la-maison-pythonic/python/push-to-db/push-to-db.service.sample /lib/systemd/system/push-to-db.service
 sudo chmod 644 /lib/systemd/system/push-to-db.service
 ```
 

@@ -72,5 +72,6 @@ Les tableaux de bords (projet "Dashboard", Python + Flask + Materialize)
 ![Tableaux de bords](res/info/dashboard-5.png)
 
 # Annexes
-* [res/install-rapide.md](Installation rapide)
-* [res/mode-hors-ligne.md](Mode Hors Ligne) 
+* [Installation Rapide](res/install-rapide.md)
+* [Mode Hors Ligne](res/mode-hors-ligne.md) 
+
