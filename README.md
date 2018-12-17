@@ -2,7 +2,7 @@
 
 ![La Maison Pythonic](res/logo/la-maison-pythonic.png)
 
-La Maison Pythonic, c'est un projet didactique accompagnant __le livre "(TODO)"__ et dont le but est 
+La Maison Pythonic, c'est un projet didactique accompagnant __le livre "Python, Raspberry-Pi et Flask"__ et dont le but est 
 * d'aborder la capture de données avec des objets Internet (ESP8266 sous MicroPython),  
 * la transmission télémétrique avec Mosquitto MQTT, 
 * le stockage en base de données (SQLite3 et Python), 
@@ -27,7 +27,7 @@ Les points technologiques du livre sont isolés et vulgarisés avant d'être int
 
 À l'issue de ce livre, le lecteur disposera de bases solides pour créer sereinement une grande variété de solutions, plus ou moins sophistiquées, en fonction de ses besoins.
 
-__Plus d'information sur le livre__ sur [le site de l'éditeur (Editions ENI)](https://www.editions-eni.fr/livre/python-raspberry-pi-et-flask-capturez-des-donnees-telemetriques-et-realisez-des-tableaux-de-bord-web-9782409016318)
+__Plus d'information sur le livre__ sur [le site de l'auteur (MC Hobby)](https://shop.mchobby.be/doc/1423-python-raspberry-pi-et-flask-capturez-des-donnees-telemetriques-et-realisez-des-tableaux-de-board-web-3232100014237.html) ou [le site de l'éditeur (Editions ENI)](https://www.editions-eni.fr/livre/python-raspberry-pi-et-flask-capturez-des-donnees-telemetriques-et-realisez-des-tableaux-de-bord-web-9782409016318)
 
 __Le code source de ce GitHub correspondant au livre__ est disponible dans l'archive [la-maison-pythonic-(master-livre).zip](https://github.com/mchobby/la-maison-pythonic/raw/master/res/la-maison-pythonic-(master-livre).zip) . 
 
