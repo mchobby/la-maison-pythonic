@@ -51,12 +51,14 @@
            
       <!--Import jQuery before materialize.js-->
       <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
       <script type="text/javascript" src="{{ url_for( 'static', filename='js/materialize.min.js') }}"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" ></script>
       <script type="text/javascript" src="{{ url_for( 'static', filename='js/block.js') }}" ></script>
+      <script type="text/javascript" src="{{ url_for( 'static', filename='js/mqtt.js') }}" ></script>
       <script type="text/javascript">
       <!--
          M.AutoInit();
+         _mqtt_notifiable = Object.create( MqttNotifiable ); // component that can be notified for mqtt messages
         $(document).ready(function(){
           {#- Needed for html select ui -#}
           $('select').formSelect();
@@ -81,8 +83,11 @@
 
           {#- Attach event to switch_block #}
           $('[id^="checkbox_switch_"]').each( function(){ 
-            console.log( 'attach onchange to ' + $(this)[0].id );
-            $(this)[0].onchange = on_switch_change
+            console.log( 'attach events to ' + $(this)[0].id );
+            $(this)[0].onchange = on_switch_change;
+            $(this)[0].onmqttmessage = on_switch_mqtt_message;
+            // append notifiable object ( DOM object, id of BlockConfigs[]
+            _mqtt_notifiable.append( $(this)[0], block_config_id_from_id( $(this)[0].id ) );
           } );
 
           {#- Custom onDocumentReady Javascrit content -#}

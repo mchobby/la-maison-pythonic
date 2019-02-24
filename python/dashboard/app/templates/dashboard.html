@@ -35,6 +35,7 @@
 {% endblock %}
 {% block onDocumentReady %}
   block_configs = {};
+  mqtt_required = {}; 
   {#- Block_config JSON Data (available to JavaScript code) #}
   {% for bwd in block_with_data_list %}
      {% if bwd.block['block_config'] %}
@@ -42,12 +43,40 @@
      {% else %}
      block_configs['{{ bwd.block_data['id'] }}'] = undefined;
      {% endif %}
+
+     {% if bwd.block['block_type'] in Block.mqtt_required_blocks %}
+     mqtt_required['{{ bwd.block_data['id'] }}'] = true;
+     {% else %}
+     mqtt_required['{{ bwd.block_data['id'] }}'] = false;
+     {% endif %}
   {% endfor %}
 
   {#- Inject MQTT definition #}
   mqtt_sources = {{ mqtt_sources | tojson }};
 
-	setTimeout(function(){
-	  window.location.reload();
-	}, {{ configuration.refresh_time*1000 }} );
-{% endblock %}
+  {#- Detect if MQTT connection is required -#}
+  is_mqtt_required = false;
+  for( let id in mqtt_required ){ 
+    if( mqtt_required[id] ){
+       is_mqtt_required = true;
+    }
+  }
+
+  
+  {#- create a client for each source #}
+  if( is_mqtt_required ){ 
+      console.log( 'Connecting MQTT brokers' );
+      connect_mqtt_sources( mqtt_sources );
+  }
+
+
+  {#- Define the Refresh timer  #}
+  if( !is_mqtt_required ) {
+    	setTimeout(function(){
+	      window.location.reload();
+	      }, {{ configuration.refresh_time*1000 }} );
+  }
+  else {
+      console.log( 'page refresh not allowed when using MQTT broker' );
+  }
+{% endblock %} 

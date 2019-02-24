@@ -41,7 +41,28 @@
 		 }
     };
 
- function check_block_config( block_type, block_config ){
+// List of Mqtt Notifiable component.
+// Component must expose a onmqttmessage( event ) see mqtt.js::dispatch_message_to_blocks() for 
+// more information.
+const MqttNotifiable = {
+    _list : [],
+    append : function( aTarget, aBlockConfigId ){
+          this._list.push( {target:aTarget, id: aBlockConfigId} ); 
+       },
+    
+    get_item : function( aBlockConfigId ){       
+         for( let idx in this._list ){
+             if( this._list[idx].id == aBlockConfigId ){
+                return this._list[idx];
+             }
+         }
+         return undefined;
+       }
+    
+};
+
+
+function check_block_config( block_type, block_config ){
  	// check the content of the block_config if configured as suited. 
  	//
  	// block_type in ['switch']
@@ -58,42 +79,99 @@
  	}
 
  	return undefined;
- }
+}
 
- function get_mqtt( mqtt_source ){
- 	// retreive the mqtt definition object
- 	_dic = mqtt_sources[mqtt_source]
- 	if( _dic == undefined ){
- 		throw mqtt_source + ' is not defined into mqtt_sources.';
- 		return
- 	}
+function block_config_id_from_id( id ){
+    // Extract the block_config index identification (string, eg: '11') 
+    // from the DOM component id (eg: checkbox_switch_11) 
+    var idx = id.lastIndexOf('_');
+    if( idx < 0 ){
+        return undefined;
+    } 
+    var _r = id.substring( idx+1 )
+    // result must also been a valid integer (parseInt may strip incorrect char)
+    if( parseInt( _r ) == NaN ) {
+        return undefined;
+    }
+    // return the result as a string
+    return String(parseInt(_r));
+}
 
- 	// Is the MQTT instance already created ?
- 	_mqtt = _dic['_mqtt']
- 	if ( _mqtt == undefined ){
- 		// create the instance
- 		_mqtt = new Paho.MQTT.Client( _dic['server'], Number(_dic['port']), "dashboard" );
- 		console.log("connect MQTT for source "+mqtt_source );
- 		console.debug( 'MQTT connexion details...' )
- 		console.debug( _dic );
- 		_mqtt.connect( {onSuccess:on_mqtt_connect, onFailure:on_mqtt_connect_fail, userName:_dic['username'], password:_dic['passwd'] } );
- 		_dic['_mqtt'] = _mqtt;
- 	}
- 	// return the instance
-    return _mqtt;
- }
+// --------------------------------------------------------------------------
+//                  BLOCK MANAGEMENT FUNCTIONS
+// --------------------------------------------------------------------------
 
- function on_mqtt_connect(){
-   // Once a connection has been made, make a subscription and send a message.
-   console.log("MQTT connected. on_mqtt_connect()");	
- }
+function on_switch_mqtt_message( event ){
+   console.debug( 'on_switch_mqtt_message '+event );
+   // Find the <p id="11_footer"> and update it
+   $('[id^="'+event.block_config_id+'_footer"]')[0].innerText = event.payload;
+   $('[id^="'+event.block_config_id+'_rectime_footer"]')[0].innerText = '---'; 
+   
+   // Find the checkbox and states definition 
+   var _checkbox = $('[id^="checkbox_switch_'+event.block_config_id+'"]')[0]
+   var _blockconfig = block_configs[event.block_config_id]
+   var _checked_value = undefined
+   var _unchecked_value = undefined
+   if( _blockconfig.switch && _blockconfig.switch.check ){
+       _checked_value =  _blockconfig.switch.check;
+   }
+   if( _blockconfig.switch && _blockconfig.switch.uncheck ){
+       _unchecked_value =  _blockconfig.switch.uncheck;
+   }
 
- function on_mqtt_connect_fail( x,y ){
-   console.error( "Fail to connect MQTT. on_mqtt_connect_fail()" );
-   M.toast( {html:'Fail to connect MQTT',classes:'red', displayLength:8000 } );
- }
- 
- function on_switch_change( event ){
+   // IF the value does not fit the state of the checkbox THEN fix it!
+   if( (event.payload == _checked_value) && !(_checkbox.checked) ){
+      // check the input
+      _checkbox.checked = true;
+   }
+   if( (event.payload == _unchecked_value) && (_checkbox.checked) ){
+      // uncheck the input
+      _checkbox.checked = false;
+   }
+} 
+
+function on_switch_change( event ){
+ 	var checkbox = event.target
+
+ 	console.debug( 'on_switch_change for '+checkbox.id+' getting '+ (checkbox.checked ? " CHECKED " : " unchecked ") );
+  // Extract the block ID from "checkbox_switch_14"
+  //var _arr = checkbox.id.split('_');
+  var block_id = block_config_id_from_id( checkbox.id ) //_arr[ _arr.length-1 ];
+  // retreive the corresponding block_config
+  var block_config = block_configs[ block_id ];
+  var err = check_block_config ( 'switch', block_config );
+  if( err ){
+    	M.toast( {html:'Erreur configuration block: '+err, classes:'red' } )
+    	return
+  }
+  if( checkbox.checked ){
+    	var _source = block_config.action.checked.source;
+    	var _topic  = block_config.action.checked.topic;
+    	var _msg    = block_config.action.checked.message;
+  }
+  else {
+    	var _source = block_config.action.unchecked.source;
+    	var _topic  = block_config.action.unchecked.topic;
+    	var _msg    = block_config.action.unchecked.message;    	
+  }
+    
+  var _client = mqtt_sources[ _source ].client
+  var message = new Paho.MQTT.Message( _msg );
+  message.destinationName = _topic;
+  try {
+      _client.send(message);
+      M.toast( {html: _msg+' sent!', classes:'green'} ) ;     
+  }
+  catch( err ){
+      M.toast( {html: 'MQTT Send error! '+err.message, classes:'red'} ) ;
+  }
+}
+
+//
+// Former version using Ajax call to /MqttProxyPublish 
+//
+/*  
+function on_switch_change_xhr( event ){
  	var checkbox = event.target
 
  	console.debug( 'on_switch_change for '+checkbox.id+' getting '+ (checkbox.checked ? " CHECKED " : " unchecked ") );
@@ -157,3 +235,4 @@
 	  });
      
  }
+*/ 

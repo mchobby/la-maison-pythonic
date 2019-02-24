@@ -10,6 +10,15 @@ La Maison Pythonic, c'est un projet didactique accompagnant __le livre "Python, 
 
 Le tout en utilisant un Raspberry-Pi comme élément central tout en respectant les limites de ses ressources.
 
+# Mise-à-jour
+
+__15 nov. 2018__ : Le code source correspondant au livre est disponible dans l'archive [la-maison-pythonic-(master-livre).zip](https://github.com/mchobby/la-maison-pythonic/raw/master/res/la-maison-pythonic-(master-livre).zip) . 
+
+__15 dec. 2018__ : [correction dans push-to-db/setup.sh](https://github.com/mchobby/la-maison-pythonic/issues/3)
+
+__02 Fev. 2019__ : Le block Switch supporte  maintenant la souscription MQTT en javascript.
+Voir l'annexe [Activer Mosquitto WebSocket](res/mosquitto-websocket.md) pour configurer le broker de façon adéquate.
+
 # A propos du Livre 
 
 Capturez des données télémétriques et réaliser des tableaux de bord WEB
@@ -75,4 +84,5 @@ Les tableaux de bords (projet "Dashboard", Python + Flask + Materialize)
 * [Installation Rapide](res/install-rapide.md)
 * [Mode Hors Ligne](res/mode-hors-ligne.md) 
 * [MQTT Track](res/mqtt_track.sh) - suivre les messages sur le broker MQTT.
+* [Mosquitto WebSocket](res/mosquitto-websocket.md) 
 
