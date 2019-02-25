@@ -2,24 +2,26 @@
 
 ![La Maison Pythonic](res/logo/la-maison-pythonic.png)
 
-La Maison Pythonic, c'est un projet didactique accompagnant __le livre "Python, Raspberry-Pi et Flask"__ et dont le but est 
+La Maison Pythonic, c'est un projet didactique accompagnant __le livre "Python, Raspberry-Pi et Flask"__ et dont le but est
 * d'aborder la capture de données avec des objets Internet (ESP8266 sous MicroPython),  
-* la transmission télémétrique avec Mosquitto MQTT, 
-* le stockage en base de données (SQLite3 et Python), 
-* le rendu sous forme de pages HTMLs avec Flask (Python). 
+* la transmission télémétrique avec Mosquitto MQTT,
+* le stockage en base de données (SQLite3 et Python),
+* le rendu sous forme de pages HTMLs avec Flask (Python).
 
 Le tout en utilisant un Raspberry-Pi comme élément central tout en respectant les limites de ses ressources.
 
 # Mise-à-jour
 
-__15 nov. 2018__ : Le code source correspondant au livre est disponible dans l'archive [la-maison-pythonic-(master-livre).zip](https://github.com/mchobby/la-maison-pythonic/raw/master/res/la-maison-pythonic-(master-livre).zip) . 
+__15 nov. 2018__ : Le code source correspondant au livre est disponible dans l'archive [la-maison-pythonic-(master-livre).zip](https://github.com/mchobby/la-maison-pythonic/raw/master/res/la-maison-pythonic-(master-livre).zip) .
 
 __15 dec. 2018__ : [correction dans push-to-db/setup.sh](https://github.com/mchobby/la-maison-pythonic/issues/3)
 
 __02 Fev. 2019__ : Le block Switch supporte  maintenant la souscription MQTT en javascript.
 Voir l'annexe [Activer Mosquitto WebSocket](res/mosquitto-websocket.md) pour configurer le broker de façon adéquate.
 
-# A propos du Livre 
+__25 Fev. 2019__ : Ajout d'un objet de de commande de chaufferie [chaufferie-oled](./esp8266/chaufferie-oled/README.md)
+
+# A propos du Livre
 
 Capturez des données télémétriques et réaliser des tableaux de bord WEB
 * __Rasperry-Pi__ avec __MQTT__, __Flask__, __SQLite__, __Python__
@@ -38,15 +40,15 @@ Les points technologiques du livre sont isolés et vulgarisés avant d'être int
 
 __Plus d'information sur le livre__ sur [le site de l'auteur (MC Hobby)](https://shop.mchobby.be/doc/1423-python-raspberry-pi-et-flask-capturez-des-donnees-telemetriques-et-realisez-des-tableaux-de-board-web-3232100014237.html) ou [le site de l'éditeur (Editions ENI)](https://www.editions-eni.fr/livre/python-raspberry-pi-et-flask-capturez-des-donnees-telemetriques-et-realisez-des-tableaux-de-bord-web-9782409016318)
 
-__Le code source de ce GitHub correspondant au livre__ est disponible dans l'archive [la-maison-pythonic-(master-livre).zip](https://github.com/mchobby/la-maison-pythonic/raw/master/res/la-maison-pythonic-(master-livre).zip) . 
+__Le code source de ce GitHub correspondant au livre__ est disponible dans l'archive [la-maison-pythonic-(master-livre).zip](https://github.com/mchobby/la-maison-pythonic/raw/master/res/la-maison-pythonic-(master-livre).zip) .
 
-# Installation 
+# Installation
 
 Voir [les notes d'installation rapide](res/install-rapide.md)
 
-# Matériel 
+# Matériel
 Vous trouverez facilement nécessaire chez les distributeurs Adafruit. Voici une proposition de lien:
-* [Feather ESP8266 Huzzah](https://shop.mchobby.be/feather/846-feather-huzzah-avec-esp8266-3232100008465-adafruit.html) - plateforme certifiée distribuée dans le monde entier! 
+* [Feather ESP8266 Huzzah](https://shop.mchobby.be/feather/846-feather-huzzah-avec-esp8266-3232100008465-adafruit.html) - plateforme certifiée distribuée dans le monde entier!
 * LED et Bouton, résistance pull-up et déparasitage logiciel
 * [Potentiomètre](https://shop.mchobby.be/autres/33-potentiometre-breadboard-10k-3232100000339.html) sur l'entrée analogique
 * [MCP23017](https://shop.mchobby.be/ci/218-mcp23017-extension-16-entree-sortie-i2c-3232100002180.html) pour ajouter des entrées sorties
@@ -82,7 +84,6 @@ Les tableaux de bords (projet "Dashboard", Python + Flask + Materialize)
 
 # Annexes
 * [Installation Rapide](res/install-rapide.md)
-* [Mode Hors Ligne](res/mode-hors-ligne.md) 
+* [Mode Hors Ligne](res/mode-hors-ligne.md)
 * [MQTT Track](res/mqtt_track.sh) - suivre les messages sur le broker MQTT.
-* [Mosquitto WebSocket](res/mosquitto-websocket.md) 
-
+* [Mosquitto WebSocket](res/mosquitto-websocket.md)

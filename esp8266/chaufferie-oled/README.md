@@ -17,3 +17,7 @@ vice-versa.
 Le schéma en [haute résolution est disponible ici](schema.png).
 
 A noter aussi qu'il y a des [subtilités de fonctionnant d'un ESP8266 et OLED I2C](feather_SSD1306_128x32.png).
+
+# Code MicroPython
+
+Voir le fichier [main.py](main.py) pour le code à copier sur l'ESP MicroPython.
