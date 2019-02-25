@@ -12,7 +12,7 @@ vice-versa.
 
 # Schéma
 
-![Schéma de raccordement](../../res/info/schema-mini.jpg)
+![Schéma de raccordement](../../res/info/chaufferie-oled-mini.jpg)
 
 Le schéma en [haute résolution est disponible ici](schema.png).
 
