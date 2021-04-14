@@ -1,15 +1,18 @@
 # coding: utf8
-""" La Maison Pythonic - Afficheur chauferie avec écran OLED v0.1
+""" La Maison Pythonic - Afficheur chauferie avec écran OLED v0.2
 
 Permet d'envoyer des commandes à l'objet chaufferie et d'avoir des
 informations sur l'état et le température.
+
+ 	v0.1 - Initial Writing
+ 	v0.2 - support for ESP32
  """
 
 from machine import Pin, reset, Timer
 import time
 from ubinascii import hexlify
 from network import WLAN
-
+import os
 
 CLIENT_ID = 'chaufferie-oled'
 
@@ -45,10 +48,50 @@ temp = '?'
 operation = 'attente'
 
 # Interface utilisateur
-CHAUD_TOGGLE_PIN = 2   # BOUTON C - Broche commande MARCHE.
+# BOUTON C - Broche commande MARCHE.
+CHAUD_TOGGLE_PIN = 14 if os.uname().nodename == 'esp32' else 2
 chaud_toggle = Pin( CHAUD_TOGGLE_PIN,  Pin.IN, Pin.PULL_UP ) # Call do_chaud_on()
 
+# --- Abstraction ESP32 et ESP8266 ---
+class LED:
+	""" Abstraction LED Utilisateur pour ESP32 et ESP8266 """
+	# User LED set ESP32 is on #13 with direct logic,
+	# ESP8266 on pin #0 with reverse Logic
 
+	# Comme le code initial était développé en logique inverse sur ESP8266
+	# il faut réinverser la logique pour être compatible avec ESP32
+	def __init__( self ):
+		import os
+		if os.uname().nodename == 'esp32':
+			self._led = Pin( 13, Pin.OUT )
+			self._reverse = True # LED in direct logic
+		else:
+			self._led = Pin( 0, Pin.OUT )
+			self._reverse = False # LED in reverse logic
+
+	def value( self, value=None ):
+		""" contrôle the LED state """
+		if value == None:
+			# lire l'état de la LED
+			if self._reverse:
+				return not( self._led.value() )
+			else:
+				return self._led.value()
+		else:
+			# Modifier l'état de la LED
+			if self._reverse:
+				value = not( value )
+			self._led.value( value )
+
+def get_i2c():
+	""" Abstraction du bus I2C pour ESP32 et ESP8266 """
+	import os
+	if os.uname().nodename == 'esp32':
+		return I2C( sda=Pin(23), scl=Pin(22) )
+	else:
+		return I2C( sda=Pin(4), scl=Pin(5) )
+
+# --- Fonction utilitaire ---
 def do_chaud_toggle( timer ):
 	global operation
 	global chaud_etat
@@ -70,7 +113,7 @@ chaud_toggle.irq( debounce_chaud_toggle, Pin.IRQ_RISING )
 
 # --- Demarrage conditionnel ---
 runapp = Pin( 12,  Pin.IN, Pin.PULL_UP )
-led = Pin( 0, Pin.OUT )
+led = LED()
 led.value( 1 ) # eteindre
 
 # chargement des bibliotheques
@@ -83,7 +126,7 @@ except Exception as e:
 
 # declare le bus i2c (if any)
 #
-i2c = I2C( sda=Pin(4), scl=Pin(5) )
+i2c = get_i2c()
 # OLED
 lcd = SSD1306_I2C( 128, 32, i2c )
 lcd.fill(1) # Rempli l'écran en blanc
@@ -167,7 +210,7 @@ except Exception as e:
 	led_error( step=2 ) # check MQTT_SERVER, MQTT_USE- MQTT_PSWD
 
 
-# créer les senseurs
+# créer les capteurs
 try:
 	pass
 except Exception as e:

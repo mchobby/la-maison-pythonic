@@ -7,6 +7,8 @@ esp8266/cabane/am2315.py
 esp8266/salon/ads1x15.py
 esp8266/veranda/ads1x15.py
 
+pushgit.sh
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

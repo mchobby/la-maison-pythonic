@@ -2,7 +2,7 @@
 import sys
 
 # Default dashboard.cfg file that should be stored in /etc/pythonic/ to override content
-# 
+#
 db='/var/local/sqlite/dashboard.db'
 db_class='DashboardDB'
 
@@ -18,13 +18,13 @@ db_pythonic_class = 'PythonicDB'
 #   allows block to interact with mqtt servers
 mqtt_sources = [ 'mqtt_pythonic' ]
 
-mqtt_pythonic = 'pythonic.local' # Mqtt server
-mqtt_pythonic_port = 1883
+mqtt_pythonic = '192.168.1.210' # Mqtt server
+mqtt_pythonic_port = 1883 
 mqtt_pythonic_username = 'pusr103'
-mqtt_pythonic_passwd   = '21052017' 
+mqtt_pythonic_passwd   = '21052017'
 
 # Refresh Time in sec (eg: reload the dashboard)
-refresh_time=120 
+refresh_time=120
 
 #
 SECRET_KEY = b'dezaijéàç684894zeaé@a9rè!tgeankeazopfr)àei'

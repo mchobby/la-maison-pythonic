@@ -1,0 +1,50 @@
+CREATE DATABASE home_data
+
+use home_data
+
+
+insert temp_maison,piece="cuisine" value=0.01
+insert temp_maison,piece="salon" value=0.01
+insert temp_maison,piece="sam" value=0.01
+insert temp_maison,piece="bureau" value=0.01
+
+
+show field keys from temp_maison
+show tag keys from temp_maison
+show series
+
+CREATE RETENTION POLICY "huit_heures" on "home_data" DURATION 8h REPLICATION 1 DEFAULT
+
+CREATE RETENTION POLICY "six_mois" ON "home_data" DURATION 26w REPLICATION 1
+
+CREATE CONTINUOUS QUERY "cq_15m" 
+ON "home_data" 
+BEGIN 
+  SELECT MAX("value") as "value", "piece" 
+  INTO "six_mois"."temp_maison" 
+  FROM "temp_maison" 
+  GROUP BY "piece", time(15m) 
+END
+
+insert temp_maison,piece="cuisine" value=1
+insert temp_maison,piece="cuisine" value=0
+insert temp_maison,piece="cuisine" value=5
+insert temp_maison,piece="salon" value=22.5
+insert temp_maison,piece="sam" value=18.5
+insert temp_maison,piece="sam" value=18.7
+insert temp_maison,piece="sam" value=18.2
+
+> select * from "six_mois".temp_maison
+
+# Attendre 15 minutes
+
+> select * from "six_mois".temp_maison
+name: temp_maison
+time                piece     piece_1   value
+----                -----     -------   -----
+1607179500000000000 "cuisine" "cuisine" 5
+1607179500000000000 "salon"   "salon"   22.5
+1607179500000000000 "sam"     "sam"     18.7
+
+
+

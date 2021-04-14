@@ -1,7 +1,7 @@
-""" La Maison Pythonic - souscription sur broker MQTT pour ESP8266 sous MicroPython.
-    ACTIVE LA LED SUR LA BROCHE 0.
+""" La Maison Pythonic - souscription sur broker MQTT depuis ESP32 sous MicroPython.
+    ACTIVE LA LED SUR LA BROCHE 13.
 
-    pour ESP32, voir script mqtt_sub32.py """ 
+    Pour ESP8266 voir script mqtt_sub.py  """ 
 import time
 from network import WLAN
 from machine import Pin
@@ -17,8 +17,8 @@ MQTT_SERVER = "192.168.1.210"
 MQTT_USER = 'pusr103'
 MQTT_PSWD = '21052017'
 
-led = Pin( 0, Pin.OUT )
-led.value( 1 ) # eteindre
+led = Pin( 13, Pin.OUT )
+led.value( 0 ) # eteindre
 
 def sub_cb( topic, msg ):
 	""" fonction de rappel pour souscription MQTT """
@@ -30,8 +30,8 @@ def sub_cb( topic, msg ):
 
 	if t == 'cmd/led':
 		print( "changement etat led")
-		# LED en logique inversée
-		led.value( 1 if m=="off" else 0 )
+		# LED en logique directe
+		led.value( 1 if m=="on" else 0 )
 
 print( "Creation MQTTClient")
 q = MQTTClient( client_id = CLIENT_ID, server = MQTT_SERVER, user = MQTT_USER, password = MQTT_PSWD )

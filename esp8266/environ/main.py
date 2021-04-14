@@ -1,19 +1,18 @@
 # coding: utf8
-""" La Maison Pythonic - Objet chauferie v0.2
+""" La Maison Pythonic - Objet Environnemental
 
-	Envoi des données température et activation de la chaufferie via  serveur MQTT
+	Envoi des données sur la qualité de l'air vers serveur MQTT
 
- 	v0.1 - Initial Writing
- 	v0.2 - support for ESP32
+ 	v0.1 - Initial Writing (ESP32 ONLY)
  """
 
-from machine import Pin, reset
+from machine import Pin, I2C, ADC, reset
 import time
 from ubinascii import hexlify
 from network import WLAN
 import os
 
-CLIENT_ID = 'chaufferie'
+CLIENT_ID = 'environ-0'
 
 # Utiliser résolution DNS (serveur en ligne)
 # MQTT_SERVER = 'test.mosquitto.org'
@@ -38,18 +37,9 @@ MQTT_PSWD = '21052017'
 
 # redemarrage auto après erreur
 ERROR_REBOOT_TIME = 3600 # 1 h = 3600 sec
-# CHAUDIERE
-# Broche activation relais chaudière
-CHAUD_PIN =  27 if os.uname().nodename == 'esp32' else 13
-chaud     = None # objet Pin de la chaudière
-last_chaud_state = None # Dernier etat connu
-# temps (sec) du dernier chg d'etat
-last_chaud_state_time = 0
-
-# Senseur Temp. DS18B20
-DS18B20_PIN = 14 if os.uname().nodename == 'esp32' else 2
-ds          = None # class DS18x20
-ds_rom      = None # Adresse du ds18b20 sur le bus OneWire
+# Capteur de température TMP36
+A2 = 34 # A2 on ESP32
+TMP36_PIN =  A2
 
 # --- Abstraction ESP32 et ESP8266 ---
 class LED:
@@ -82,13 +72,13 @@ class LED:
 				value = not( value )
 			self._led.value( value )
 
-#def get_i2c():
-#	""" Abstraction du bus I2C pour ESP32 et ESP8266 """
-#	import os
-#	if os.uname().nodename == 'esp32':
-#		return I2C( sda=Pin(23), scl=Pin(22) )
-#	else:
-#		return I2C( sda=Pin(4), scl=Pin(5) )
+def get_i2c():
+	""" Abstraction du bus I2C pour ESP32 et ESP8266 """
+	import os
+	if os.uname().nodename == 'esp32':
+		return I2C( sda=Pin(23), scl=Pin(22) )
+	else:
+		return I2C( sda=Pin(4), scl=Pin(5) )
 
 # --- Demarrage conditionnel ---
 runapp = Pin( 12,  Pin.IN, Pin.PULL_UP )
@@ -121,44 +111,18 @@ if runapp.value() != 1:
 led.value( 0 ) # allumer
 
 # --- Programme Pincipal ---
-def sub_cb( topic, msg ):
-	""" fonction de rappel pour souscriptions MQTT """
-	# debogage
-	#print( '-'*20 )
-	#print( topic )
-	#print( msg )
-
-	# bytes -> str
-	t = topic.decode( 'utf8' )
-	m = msg.decode('utf8')
-	try:
-		if t == "maison/cave/chaufferie/cmd":
-			chaud_exec_cmd( cmd = m )
-	except Exception as e:
-		# Capturer TOUTE exception sur souscription
-		# Ne pas crasher check_mqtt_sub et
-		#    asyncio.run_until_complete et l'ESP!
-
-		# Info debug sur REPL
-		print( "="*20 )
-		print( "Subscriber callback (sub_cb) catch an exception:" )
-		print( e )
-		print( "for topic and message" )
-		print( t )
-		print( m )
-		print( "="*20 )
-
 from umqtt.simple import MQTTClient
 try:
+	if os.uname().nodename != 'esp32':
+		raise Exception( "ESP32 only project (3.3V Analog required)")
+
 	q = MQTTClient( client_id = CLIENT_ID, server = MQTT_SERVER, user = MQTT_USER, password = MQTT_PSWD )
 	sMac = hexlify( WLAN().config( 'mac' ) ).decode()
 	q.set_last_will( topic="disconnect/%s" % CLIENT_ID , msg=sMac )
-	q.set_callback( sub_cb )
 
 	if q.connect() != 0:
 		led_error( step=1 )
 
-	q.subscribe( 'maison/cave/chaufferie/cmd' )
 except Exception as e:
 	print( e )
 	# check MQTT_SERVER, MQTT_USER, MQTT_PSWD
@@ -166,8 +130,7 @@ except Exception as e:
 
 # chargement des bibliotheques
 try:
-	from onewire import OneWire
-	from ds18x20 import DS18X20
+	from ccs811 import CCS811
 	from machine import Pin
 except Exception as e:
 	print( e )
@@ -175,17 +138,13 @@ except Exception as e:
 
 # créer les capteurs
 try:
-	# Capteur temp DS18B20
-	ds = DS18X20( OneWire(Pin(DS18B20_PIN)))
-	roms = ds.scan()
-	if len(roms) == 0:
-		raise Exception( 'ds18b20 not available!')
-	ds_rom = roms[0]
-
-	# Chaudière - init à l'arrêt
-	chaud = Pin( CHAUD_PIN, Pin.OUT )
-	chaud.value( 0 )
-	last_chaud_state = "ARRET"
+	i2c = get_i2c()
+	adc = ADC( Pin(TMP36_PIN) )
+	adc.atten( ADC.ATTN_2_5DB ) # 1.5V max
+	# Capteur temp CCS811
+	ccs = CCS811( i2c )
+	if ccs.check_error:
+		raise Exception( "CCS811 ERROR_ID = %s" % ccs.error_id.as_text )
 except Exception as e:
 	print( e )
 	led_error( step=4 )
@@ -201,70 +160,30 @@ except Exception as e:
 
 import uasyncio as asyncio
 
-def chaud_exec_cmd( cmd ):
-	""" Executer la commande cmd sur la chaudière.
-	    Modifie l état de la chaudière et faire
-	    les notification """
-	assert cmd in ("MARCHE","ARRET"), "Invalid chaud cmd"
-
-	global q
-	global last_chaud_state
-	global last_chaud_state_time
-	global chaud
-
-	# Si pas chg d état -> rien faire
-	if cmd == last_chaud_state:
-		return
-	# eviter plusieurs chg état en 10 sec
-	if (time.time()-last_chaud_state_time)<10:
-		q.publish( "maison/cave/chaufferie/etat", "REJECT-CMD" ) # informer du refus
-		time.sleep(0.100)
-		q.publish( "maison/cave/chaufferie/etat", last_chaud_state ) # Renvoyer l etat
-		return
-	# chg d'état
-	last_chaud_state = cmd
-	last_chaud_state_time = time.time() # en sec
-	# changer etat relais
-	chaud.value( 1 if cmd == "MARCHE" else 0 )
-	# Notification MQTT du nouvel état
-	#   Etat = commande = ("ARRET","ARRET")
-	q.publish( "maison/cave/chaufferie/etat", cmd )
-	# Force la publication de la temperature maintenant!
-	capture_1h()
-
-def capture_1h():
-	""" Executé pour capturer la temperature chaque heure """
-	global ds
-	global ds_rom
-	# ds18b20 - senseur température
-	ds.convert_temp()
-	time.sleep_ms( 750 )
-	valeur = ds.read_temp( ds_rom )
+def capture_5min():
+	""" Executé pour capturer la temperature et CCS toutes les 5 min """
+	global ccs
+	global adc
+	# Attendre capteur prêt
+	while not ccs.data_ready:
+		time.sleep( 0.100 )
 	# transformer en chaine de caractères
-	t = "{0:.2f}".format(valeur)
-	q.publish( "maison/cave/chaufferie/temp-eau", t )
+	eco2 = "{0:d}".format(ccs.eco2) # PPM
+	q.publish( "maison/rez/salle/eco2", eco2 )
+	tvoc = "{0:d}".format(ccs.tvoc) # PPB
+	q.publish( "maison/rez/salle/tvoc", tvoc )
 
-def capture_10m():
-	""" Capture de la temperature toutes les 10min (mais
-	    dans 	l heure suivant un changement d etat de
-	    la chaudiere) """
-	global last_chaud_state_time
-	# Dans les 3600 sec (1h) après
-	if last_chaud_state_time and ( (time.time() - last_chaud_state_time) < 3600 ):
-		# execution par la routine de capture
-		capture_1h()
+	# temperature
+	mv = (adc.read_u16() * 1.5 )/65.635
+	temp = "{0:.2f}".format((mv-500)/10) # temp °C
+	q.publish( "maison/rez/salle/temp", temp )
+
 
 def heartbeat():
 	""" Led eteinte 200ms toutes les 10 sec """
 	# PS: LED déjà éteinte par run_every!
 	time.sleep( 0.2 )
 
-def check_mqtt_sub():
-	""" Process the MQTT Subscription messages """
-	global q
-	# Non-Blocking wait_msg(). Will call mqtt callback
-	# (sub_cb) when a message is received for subscription
-	q.check_msg() # get one message (if any)
 
 async def run_every( fn, min= 1, sec=None):
 	""" Execute a function fn every min minutes
@@ -289,14 +208,9 @@ async def run_app_exit():
 	return
 
 loop = asyncio.get_event_loop()
-loop.create_task( run_every(capture_1h    , min=60) )
-loop.create_task( run_every(capture_10m   , min=10) )
+loop.create_task( run_every(capture_5min  , min=5  ) )
 loop.create_task( run_every(heartbeat     , sec=10 ) )
-loop.create_task( run_every(check_mqtt_sub, sec=2.5) )
 try:
-	# Annonce l'etat initial
-	q.publish( "maison/cave/chaufferie/etat", last_chaud_state )
-
 	# Execution du scheduler
 	loop.run_until_complete( run_app_exit() )
 except Exception as e :

@@ -40,3 +40,12 @@ create table ts_connect (
   qos integer,
   rectime integer
 );
+
+create table ts_salle (
+  id integer primary key,
+  topic text,
+  message text,
+  qos interger,
+  rectime integer 
+);
+

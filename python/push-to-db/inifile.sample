@@ -45,13 +45,18 @@ subscribe=maison/cave/chaufferie/etat,maison/cave/chaufferie/temp-eau
 class=MqttTimeserieCapture
 storage=sqlitedb.ts_chauf
 
+[mqtt.capture.30]
+subscribe=maison/rez/salle/#
+class=MqttTimeserieCapture
+storage=sqlitedb.ts_salle
+
 [mqtt.capture.4]
 subscribe=connect/#
 class=MqttTopicCapture
 storage=sqlitedb.topicmsg
 
 [mqtt.capture.5]
-subscribe=connect/#
+subscribe=connect/#,disconnect/#
 class=MqttTimeserieCapture
 storage=sqlitedb.ts_connect
 

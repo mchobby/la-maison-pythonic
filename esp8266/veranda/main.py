@@ -1,9 +1,12 @@
 # coding: utf8
-""" La Maison Pythonic - Object Veranda v0.1 
+""" La Maison Pythonic - Object Veranda v0.2
 
 	Envoi des données température et contact magnétic vers serveur MQTT
- """ 
 
+ 	v0.1 - Initial Writing
+ 	v0.2 - support for ESP32
+ """
+import os
 from machine import Pin, I2C, reset
 import time
 from ubinascii import hexlify
@@ -11,7 +14,7 @@ from network import WLAN
 
 CLIENT_ID = 'veranda'
 
-# Utiliser résolution DNS (serveur en ligne) 
+# Utiliser résolution DNS (serveur en ligne)
 # MQTT_SERVER = 'test.mosquitto.org'
 #
 # Attention: MicroPython sous ESP8266 ne gère pas mDns!
@@ -22,24 +25,24 @@ MQTT_SERVER = "192.168.1.210"
 MQTT_USER = 'pusr103'
 MQTT_PSWD = '21052017'
 
-# redemarrage auto après erreur 
+# redemarrage auto après erreur
 ERROR_REBOOT_TIME = 3600 # 1 h = 3600 sec
 
 # Contact
-CONTACT_PIN = 13 # Signal du senseur PIR.
+CONTACT_PIN =  27 if os.uname().nodename == 'esp32' else 13  # Signal du senseur PIR.
 last_contact_state = 0 # 0=fermé, 1=ouvert
 
 # Etat LDR
-#    Valeur d'hystersis (pour éviter la 
+#    Valeur d'hystersis (pour éviter la
 #    basculement continuel)
-LDR_HYST  = 200  
+LDR_HYST  = 200
 last_ldr_state = "NOIR" # Noir ou ECLAIRAGE
 
 def ldr_to_state( adc_ldr, adc_pivot ):
 	""" Transforme la valeur adc lue en NOIR et ECLAIRAGE """
 	global last_ldr_state
-	# print( "adc_ldr, adc_pivot = %s, %s" % 
-	#        (adc_ldr, adc_pivot) ) 
+	# print( "adc_ldr, adc_pivot = %s, %s" %
+	#        (adc_ldr, adc_pivot) )
 	if adc_ldr > (adc_pivot+LDR_HYST):
 		return "ECLAIRAGE"
 	elif adc_ldr < (adc_pivot-LDR_HYST):
@@ -47,9 +50,48 @@ def ldr_to_state( adc_ldr, adc_pivot ):
 	else:
 		return last_ldr_state
 
+# --- Abstraction ESP32 et ESP8266 ---
+class LED:
+	""" Abstraction LED Utilisateur pour ESP32 et ESP8266 """
+	# User LED set ESP32 is on #13 with direct logic,
+	# ESP8266 on pin #0 with reverse Logic
+
+	# Comme le code initial était développé en logique inverse sur ESP8266
+	# il faut réinverser la logique pour être compatible avec ESP32
+	def __init__( self ):
+		import os
+		if os.uname().nodename == 'esp32':
+			self._led = Pin( 13, Pin.OUT )
+			self._reverse = True # LED in direct logic
+		else:
+			self._led = Pin( 0, Pin.OUT )
+			self._reverse = False # LED in reverse logic
+
+	def value( self, value=None ):
+		""" contrôle the LED state """
+		if value == None:
+			# lire l'état de la LED
+			if self._reverse:
+				return not( self._led.value() )
+			else:
+				return self._led.value()
+		else:
+			# Modifier l'état de la LED
+			if self._reverse:
+				value = not( value )
+			self._led.value( value )
+
+def get_i2c():
+	""" Abstraction du bus I2C pour ESP32 et ESP8266 """
+	import os
+	if os.uname().nodename == 'esp32':
+		return I2C( sda=Pin(23), scl=Pin(22) )
+	else:
+		return I2C( sda=Pin(4), scl=Pin(5) )
+
 # --- Demarrage conditionnel ---
 runapp = Pin( 12,  Pin.IN, Pin.PULL_UP )
-led = Pin( 0, Pin.OUT )
+led = LED()
 led.value( 1 ) # eteindre
 
 def led_error( step ):
@@ -63,7 +105,7 @@ def led_error( step ):
 		time.sleep( 1 )
 		# clignote nbr fois
 		for i in range( step ):
-			led.value( 0 ) 
+			led.value( 0 )
 			time.sleep( 0.5 )
 			led.value( 1 )
 			time.sleep( 0.5 )
@@ -79,11 +121,13 @@ led.value( 0 ) # allumer
 
 # --- Programme Pincipal ---
 from umqtt.simple import MQTTClient
-try: 
-	q = MQTTClient( client_id = CLIENT_ID, 
-		server = MQTT_SERVER, 
-		user = MQTT_USER, 
+try:
+	q = MQTTClient( client_id = CLIENT_ID,
+		server = MQTT_SERVER,
+		user = MQTT_USER,
 		password = MQTT_PSWD )
+	sMac = hexlify( WLAN().config( 'mac' ) ).decode()
+	q.set_last_will( topic="disconnect/%s" % CLIENT_ID , msg=sMac )
 	if q.connect() != 0:
 		led_error( step=1 )
 except Exception as e:
@@ -99,7 +143,7 @@ except Exception as e:
 	led_error( step=3 )
 
 # declare le bus i2c
-i2c = I2C( sda=Pin(4), scl=Pin(5) )
+i2c = get_i2c()
 
 
 # créer les senseurs
@@ -108,9 +152,9 @@ try:
 
 	contact = Pin( CONTACT_PIN, Pin.IN, Pin.PULL_UP )
 	last_contact_state = contact.value()
-	# lire la valeur de la LDR et 
+	# lire la valeur de la LDR et
 	#    déterminer le dernier etat connu
-	last_ldr_state = ldr_to_state( 
+	last_ldr_state = ldr_to_state(
 		adc_ldr   = adc.read( rate=0, channel1=1),
 		adc_pivot = adc.read( rate=0, channel1=2) )
 except Exception as e:
@@ -136,7 +180,7 @@ def capture_1h():
 	mvolts = valeur * 0.1875
 	t = (mvolts - 500)/10
 	# transformer en chaine de caractère
-	t = "{0:.2f}".format(t)  
+	t = "{0:.2f}".format(t)
 	q.publish( "maison/rez/veranda/temp", t )
 
 def check_contact():
@@ -149,17 +193,17 @@ def check_contact():
 	# état différent -> deparasitage logiciel
 	time.sleep( 0.100 )
 	# relire l'état et s'assurer qu'il n'a pas changé
-	valeur = contact.value()  
+	valeur = contact.value()
 	if valeur != last_contact_state:
-		q.publish( "maison/rez/veranda/portefen", 
+		q.publish( "maison/rez/veranda/portefen",
 			"OUVERT" if valeur==1 else "FERME" )
 		last_contact_state = valeur
 
 def check_ldr():
 	global q
 	global adc
-	global last_ldr_state 
-	ldr_state = ldr_to_state( 
+	global last_ldr_state
+	ldr_state = ldr_to_state(
 		adc_ldr = adc.read( rate=0, channel1=1),
 		adc_pivot = adc.read( rate=0, channel1=2) )
 	if ldr_state != last_ldr_state:
@@ -191,7 +235,7 @@ async def run_app_exit():
 	global runapp
 	while runapp.value()==1:
 		await asyncio.sleep( 10 )
-	return 
+	return
 
 loop = asyncio.get_event_loop()
 loop.create_task( run_every(capture_1h, min=60) )
@@ -205,5 +249,5 @@ except Exception as e :
 	led_error( step=6 )
 
 loop.close()
-led.value( 1 ) # eteindre 
+led.value( 1 ) # eteindre
 print( "Fin!")

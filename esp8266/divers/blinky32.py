@@ -1,11 +1,11 @@
-# Example pour ESP8266 uniquement
+# Exemple pour ESP32 uniquement
 from machine import Pin
 from time import sleep
 
 # Led rouge sur la carte
-led = Pin( 0, Pin.OUT )
+led = Pin( 13, Pin.OUT )
 # Eteindre LED (logique inversée)
-led.value( 1 )
+led.value( 0 )
 
 def blink( count = 3 ):
     # clignoter = changer 2x d état
@@ -14,7 +14,7 @@ def blink( count = 3 ):
         led.value( 0 if led.value()==1 else 1 )
         sleep( 1 )
     # Eteindre la LED 
-    led.value( 1 )
+    led.value( 0 )
 
 # exécution (pour un temps limité)
 print( 'Blink x 10' )
